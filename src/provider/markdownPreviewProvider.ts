@@ -5,12 +5,13 @@ import { Global } from '@/common/global';
 import { getWorkspacePath } from '@/common/fileUtil';
 import { TelemetryService } from '@/service/telemetryService';
 import { fileTypeFromPath } from '@/service/officeViewType';
+import { MarkdownService } from '@/service/markdownService';
 import { MARKDOWN_THEMES, DEFAULT_THEME_ID } from './markdownThemes';
 // 共享渲染器(CJS),require 形式避免 tsc 对 .js 缺类型声明报错
 const { renderMarkdownToHtml } = require('../service/markdown/render');
 
 /**
- * 只读 Markdown 预览:宿主侧用 markdown-it 渲染,可切换的调色板皮肤展示。
+ * 只读 Markdown 预览:宿主侧用 markdown-it 渲染,可切换的调色板皮肤展示,支持主题化导出。
  */
 export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvider {
 
@@ -66,6 +67,9 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
             if (MARKDOWN_THEMES.some(t => t.id === id)) {
                 this.context.globalState.update('markdownPreviewTheme', id);
             }
+        }).on('exportPreview', (fmt: string) => {
+            const themeId = this.context.globalState.get<string>('markdownPreviewTheme', DEFAULT_THEME_ID);
+            new MarkdownService(this.context).exportPreview(uri, fmt, themeId);
         }).on('externalUpdate', () => scheduleRender())
             .on('fileChange', () => scheduleRender())
             .on('dispose', () => { if (renderTimer) clearTimeout(renderTimer); });
@@ -142,18 +146,19 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
 (function(){
   const THEMES = ${themesJson};
   const CURRENT = ${JSON.stringify(themeId)};
-  const btn = document.createElement('div');
-  btn.id = 'md-theme-btn'; btn.textContent = '🎨'; btn.title = '切换主题';
-  const panel = document.createElement('div'); panel.id = 'md-theme-panel';
-  const groups = [['light','亮色'],['dark','暗色']];
+
+  // 主题切换
+  const themeBtn = document.createElement('div');
+  themeBtn.id = 'md-theme-btn'; themeBtn.textContent = '🎨'; themeBtn.title = '切换主题';
+  const themePanel = document.createElement('div'); themePanel.id = 'md-theme-panel';
   function markActive(id){
-    panel.querySelectorAll('.md-theme-item').forEach(function(el){
+    themePanel.querySelectorAll('.md-theme-item').forEach(function(el){
       el.classList.toggle('active', el.getAttribute('data-id') === id);
     });
   }
-  groups.forEach(function(g){
+  [['light','亮色'],['dark','暗色']].forEach(function(g){
     const title = document.createElement('div');
-    title.className = 'md-theme-group-title'; title.textContent = g[1]; panel.appendChild(title);
+    title.className = 'md-theme-group-title'; title.textContent = g[1]; themePanel.appendChild(title);
     THEMES.filter(function(t){ return t.group === g[0]; }).forEach(function(t){
       const item = document.createElement('div');
       item.className = 'md-theme-item'; item.textContent = t.name; item.setAttribute('data-id', t.id);
@@ -161,15 +166,34 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
         document.documentElement.setAttribute('data-theme', t.id);
         markActive(t.id);
         window.__mdPost && window.__mdPost('setTheme', t.id);
-        panel.classList.remove('open');
+        themePanel.classList.remove('open');
       });
-      panel.appendChild(item);
+      themePanel.appendChild(item);
     });
   });
-  btn.addEventListener('click', function(e){ e.stopPropagation(); panel.classList.toggle('open'); });
-  panel.addEventListener('click', function(e){ e.stopPropagation(); });
-  document.addEventListener('click', function(){ panel.classList.remove('open'); });
-  document.body.appendChild(btn); document.body.appendChild(panel);
+
+  // 导出菜单
+  const exportBtn = document.createElement('div');
+  exportBtn.id = 'md-export-btn'; exportBtn.textContent = '📤'; exportBtn.title = '导出';
+  const exportPanel = document.createElement('div'); exportPanel.id = 'md-export-panel';
+  [['pdf','PDF'],['html','HTML'],['png','长图 (PNG)']].forEach(function(f){
+    const item = document.createElement('div');
+    item.className = 'md-theme-item'; item.textContent = f[1];
+    item.addEventListener('click', function(){
+      window.__mdPost && window.__mdPost('exportPreview', f[0]);
+      exportPanel.classList.remove('open');
+    });
+    exportPanel.appendChild(item);
+  });
+
+  themeBtn.addEventListener('click', function(e){ e.stopPropagation(); exportPanel.classList.remove('open'); themePanel.classList.toggle('open'); });
+  exportBtn.addEventListener('click', function(e){ e.stopPropagation(); themePanel.classList.remove('open'); exportPanel.classList.toggle('open'); });
+  themePanel.addEventListener('click', function(e){ e.stopPropagation(); });
+  exportPanel.addEventListener('click', function(e){ e.stopPropagation(); });
+  document.addEventListener('click', function(){ themePanel.classList.remove('open'); exportPanel.classList.remove('open'); });
+
+  document.body.appendChild(themeBtn); document.body.appendChild(themePanel);
+  document.body.appendChild(exportBtn); document.body.appendChild(exportPanel);
   markActive(CURRENT);
 })();
 </script>
