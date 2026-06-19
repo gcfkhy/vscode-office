@@ -96,7 +96,7 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
 <meta charset="utf-8">
 <base href="${baseUrl}/">
 <link rel="stylesheet" href="${asset('katex/katex.min.css')}">
-<link rel="stylesheet" href="${asset('highlight/catppuccin-mocha.css')}">
+<link rel="stylesheet" href="${asset('themes.css')}">
 <link rel="stylesheet" href="${asset('preview.css')}">
 </head>
 <body>

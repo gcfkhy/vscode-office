@@ -1,0 +1,14 @@
+/* 默认兜底 = Catppuccin Mocha;每个主题一段 [data-theme] */
+:root,
+[data-theme="catppuccin-mocha"] {
+  --md-bg:#1e1e2e; --md-fg:#cdd6f4; --md-muted:#a6adc8;
+  --md-heading:#b4befe; --md-heading-border:#313244; --md-link:#89b4fa;
+  --md-border:#313244; --md-code-fg:#f38ba8; --md-code-bg:#313244;
+  --md-pre-bg:#181825; --md-pre-border:#313244;
+  --md-quote-fg:#a6adc8; --md-quote-bg:#181825; --md-quote-border:#6c7086;
+  --md-table-head-bg:#313244; --md-table-stripe:#181825;
+  --md-ui-bg:rgba(49,50,68,0.92); --md-ui-border:#45475a;
+  --hl-comment:#6c7086; --hl-keyword:#cba6f7; --hl-string:#a6e3a1; --hl-number:#fab387;
+  --hl-function:#89b4fa; --hl-attr:#f9e2af; --hl-class:#94e2d5; --hl-meta:#fab387;
+  --hl-regexp:#f5c2e7; --hl-symbol:#fab387;
+}
