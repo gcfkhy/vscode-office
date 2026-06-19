@@ -87,5 +87,5 @@ Markdown Office Viewer 會收集**匿名使用資料**，用於了解各預覽�
 - HEIC conversion: [heic2any](https://github.com/alexcorvi/heic2any)
 - Java decompiler: [JetBrains/java-decompiler](https://github.com/JetBrains/intellij-community/tree/master/plugins/java-decompiler/engine)
 - HTTP: [REST Client](https://github.com/Huachao/vscode-restclient)
-- Markdown: [Vanessa219/vditor](https://github.com/Vanessa219/vditor)
+- Markdown: [markdown-it](https://github.com/markdown-it/markdown-it)
 - Material Icon theme: [PKief/vscode-material-icon-theme](https://github.com/PKief/vscode-material-icon-theme)
