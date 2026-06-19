@@ -1,0 +1,12 @@
+/* highlight.js — Catppuccin Mocha (compact) */
+.hljs { color:#cdd6f4; background:transparent; }
+.hljs-comment,.hljs-quote { color:#6c7086; font-style:italic; }
+.hljs-keyword,.hljs-selector-tag,.hljs-built_in,.hljs-name,.hljs-tag { color:#cba6f7; }
+.hljs-string,.hljs-title.class_,.hljs-section,.hljs-attribute,.hljs-literal,.hljs-template-tag,.hljs-template-variable,.hljs-type,.hljs-addition { color:#a6e3a1; }
+.hljs-number,.hljs-symbol,.hljs-bullet,.hljs-link,.hljs-meta,.hljs-deletion { color:#fab387; }
+.hljs-title,.hljs-title.function_,.hljs-function .hljs-title { color:#89b4fa; }
+.hljs-attr,.hljs-variable,.hljs-params,.hljs-property { color:#f9e2af; }
+.hljs-selector-id,.hljs-selector-class,.hljs-selector-attr,.hljs-selector-pseudo { color:#89dceb; }
+.hljs-regexp { color:#f5c2e7; }
+.hljs-doctag,.hljs-strong { font-weight:bold; }
+.hljs-emphasis { font-style:italic; }
