@@ -215,6 +215,11 @@
 				"command": "office.gitHistory.viewFileHistory",
 				"title": "View File History",
 				"icon": "$(history)"
+			},
+			{
+				"command": "office.markdown.export",
+				"title": "Export Markdown",
+				"icon": "$(export)"
 			}
 		],
 		"keybindings": [
@@ -273,6 +278,11 @@
 					"command": "office.markdown.switch",
 					"when": "resourceExtname == '.md'",
 					"group": "navigation@-2"
+				},
+				{
+					"command": "office.markdown.export",
+					"when": "resourceExtname == '.md' || resourceExtname == '.markdown'",
+					"group": "navigation@-1"
 				},
 				{
 					"when": "editorTextFocus && resourceScheme == rest-client-response",

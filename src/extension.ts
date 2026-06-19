@@ -26,6 +26,7 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand('office.markdown.switch', (uri) => { markdownService.switchEditor(uri) }),
 		vscode.commands.registerCommand('office.markdown.paste', () => { markdownService.loadClipboardImage() }),
 		vscode.commands.registerCommand('office.html.preview', uri => HtmlService.previewHtml(uri, context)),
+		vscode.commands.registerCommand('office.markdown.export', (uri) => { markdownService.exportPick(uri) }),
 		vscode.workspace.registerTextDocumentContentProvider('decompile_java', new JavaDecompilerProvider()),
 		vscode.window.registerCustomEditorProvider("cweijan.markdownViewer", markdownPreviewProvider, viewOption),
 		vscode.window.registerCustomEditorProvider("cweijan.markdownPreview", markdownPreviewProvider, viewOption),

@@ -40,6 +40,20 @@ export class MarkdownService {
         }
     }
 
+    /** 从预览标题栏/命令面板触发:选择类型后导出当前 Markdown。 */
+    public async exportPick(uri?: vscode.Uri) {
+        if (!uri) uri = vscode.window.activeTextEditor?.document.uri;
+        if (!uri) {
+            vscode.window.showErrorMessage('No markdown file to export.');
+            return;
+        }
+        const pick = await vscode.window.showQuickPick(['pdf', 'html', 'docx'], {
+            placeHolder: 'Export markdown as',
+        });
+        if (!pick) return;
+        await this.exportMarkdown(uri, { type: pick as ExportType });
+    }
+
     public getConfig(option: ExportOption) {
         const top = Global.getConfig("pdfMarginTop")
         const { type = 'pdf', withoutOutline = false } = option;
