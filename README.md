@@ -1,4 +1,4 @@
-# Office Viewer
+# Markdown Office Viewer
 
 English | [简体中文](README-CN.md) | [繁體中文](README-TW.md)
 
@@ -22,33 +22,14 @@ This extension lets you preview and edit common office and design files directly
 
 ## Markdown
 
-This extension replaces the default Markdown editor with [Vditor](https://github.com/Vanessa219/vditor) for WYSIWYG editing. **Please note that this editor is no longer actively maintained.**
+Opening a `.md` / `.markdown` file shows a read-only **preview** rendered with markdown-it (code highlighting, KaTeX math, Mermaid diagrams, tables). Edit the source in VS Code's normal text editor (right-click → *Open With… → Text Editor*, or `Ctrl Alt E` / `⌘ ^ E` to toggle).
 
-To use the built-in VS Code Markdown editor instead, add this to your `settings.json`:
+In the bottom-right of the preview:
 
-```json
-{
-    "workbench.editorAssociations": {
-        "*.md": "default",
-        "*.markdown": "default"
-    }
-}
-```
+- 🎨 **Theme** — switch between 18 built-in light/dark palettes (Catppuccin, GitHub, Dracula, Nord, Tokyo Night, Solarized, Gruvbox, …). Your choice is remembered globally.
+- 📤 **Export** — export the preview **as you see it** to **PDF**, **HTML**, or a **long image (PNG)**. PDF and PNG need a Chromium-based browser; set its path with `vscode-office.chromiumPath` if it isn't found automatically.
 
-Right-click in the editor to export Markdown to PDF, DOCX, or HTML. PDF export requires Chromium; set the browser path with `vscode-office.chromiumPath`.
-
-![Export Markdown](image/README-CN/1685418034035.png)
-
-Shortcuts: Based on [Vditor shortcuts](shortcut.md), plus:
-
-- Move list up: `Ctrl Alt I` / `⌘ ^ I`
-- Move list down: `Ctrl Alt J` / `⌘ ^ J`
-- Edit in VS Code: `Ctrl Alt E` / `⌘ ^ E`
-
-Tips:
-
-- Resize the editor with Ctrl/Cmd + mouse scroll.
-- Open hyperlinks with Ctrl/Meta + click or double-click.
+You can also export from the editor title-bar button (PDF / HTML / DOCX).
 
 ## Other features
 
@@ -68,7 +49,7 @@ Database Client for Visual Studio Code, supporting the management of **MySQL/Mar
 
 ## Usage data
 
-Office Viewer collects **anonymous usage data** to understand which preview features are used, so we can improve the extension. Data is sent to [Azure Application Insights](https://learn.microsoft.com/azure/azure-monitor/app/app-insights-overview) via the official [`@vscode/extension-telemetry`](https://www.npmjs.com/package/@vscode/extension-telemetry) module.
+Markdown Office Viewer collects **anonymous usage data** to understand which preview features are used, so we can improve the extension. Data is sent to [Azure Application Insights](https://learn.microsoft.com/azure/azure-monitor/app/app-insights-overview) via the official [`@vscode/extension-telemetry`](https://www.npmjs.com/package/@vscode/extension-telemetry) module.
 
 ### What we collect
 
@@ -106,5 +87,5 @@ If you build and publish this extension yourself, see [docs/telemetry.md](docs/t
 - HEIC conversion: [heic2any](https://github.com/alexcorvi/heic2any)
 - Java decompiler: [JetBrains/java-decompiler](https://github.com/JetBrains/intellij-community/tree/master/plugins/java-decompiler/engine)
 - HTTP: [REST Client](https://github.com/Huachao/vscode-restclient)
-- Markdown: [Vanessa219/vditor](https://github.com/Vanessa219/vditor)
+- Markdown: [markdown-it](https://github.com/markdown-it/markdown-it)
 - Material Icon theme: [PKief/vscode-material-icon-theme](https://github.com/PKief/vscode-material-icon-theme)
