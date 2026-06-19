@@ -67,20 +67,37 @@ async function exportPreview(options) {
       await page.waitForSelector(".mermaid svg", { timeout: 5000 }).catch(() => {})
     }
     if (format === "png") {
-      await page.screenshot({ path: outPath, fullPage: true, type: "png" })
-    } else { // pdf:单页不分页,尺寸=实测内容宽×全高
+      // 长图:优先 2x 清晰;过大则降到 1x 重试;仍过大则提示改用 PDF
+      try {
+        await page.screenshot({ path: outPath, fullPage: true, type: "png" })
+      } catch (e1) {
+        await page.setViewport({ width: 980, height: 1200, deviceScaleFactor: 1 })
+        try {
+          await page.screenshot({ path: outPath, fullPage: true, type: "png" })
+        } catch (e2) {
+          throw new Error("文档过长,长图超出图片尺寸上限,请改用 PDF 导出")
+        }
+      }
+    } else { // pdf
       const dims = await page.evaluate(() => ({
         w: document.documentElement.scrollWidth,
         h: document.documentElement.scrollHeight
       }))
-      await page.pdf({
-        path: outPath,
-        printBackground: true,
-        width: `${dims.w}px`,
-        height: `${dims.h}px`,
-        pageRanges: "1",
-        margin: { top: "0", right: "0", bottom: "0", left: "0" }
-      })
+      try {
+        // 理想:单页不分页,尺寸=实测内容宽×全高
+        await page.pdf({
+          path: outPath, printBackground: true,
+          width: `${dims.w}px`, height: `${dims.h}px`, pageRanges: "1",
+          margin: { top: "0", right: "0", bottom: "0", left: "0" }
+        })
+      } catch (e1) {
+        // 过长超出 Chromium 单页上限 → 退化为较高的分页,不再失败
+        await page.pdf({
+          path: outPath, printBackground: true,
+          width: `${dims.w}px`, height: "14000px",
+          margin: { top: "0", right: "0", bottom: "0", left: "0" }
+        })
+      }
     }
   } finally {
     await browser.close()
