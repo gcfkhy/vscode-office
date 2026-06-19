@@ -75,7 +75,7 @@ export class MarkdownService {
             vscode.window.showInformationMessage(`Export preview to ${format} success: ${out}`);
         } catch (error) {
             Output.log(error && error.stack ? error.stack : error);
-            vscode.window.showErrorMessage(`导出 ${format} 失败: ${(error && error.message) || error}`, { modal: true });
+            vscode.window.showErrorMessage(`导出 ${format} 失败: ${(error && error.message) || error}`);
         }
     }
 
