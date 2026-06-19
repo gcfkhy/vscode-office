@@ -5,11 +5,12 @@ import { Global } from '@/common/global';
 import { getWorkspacePath } from '@/common/fileUtil';
 import { TelemetryService } from '@/service/telemetryService';
 import { fileTypeFromPath } from '@/service/officeViewType';
+import { MARKDOWN_THEMES, DEFAULT_THEME_ID } from './markdownThemes';
 // 共享渲染器(CJS),require 形式避免 tsc 对 .js 缺类型声明报错
 const { renderMarkdownToHtml } = require('../service/markdown/render');
 
 /**
- * 只读 Markdown 预览:宿主侧用 markdown-it 渲染,Catppuccin 暗色皮肤展示。
+ * 只读 Markdown 预览:宿主侧用 markdown-it 渲染,可切换的调色板皮肤展示。
  */
 export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvider {
 
@@ -61,6 +62,10 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
             this.context.globalState.update(`scrollTop_${uri.fsPath}`, scrollTop);
         }).on('developerTool', () => {
             vscode.commands.executeCommand('workbench.action.toggleDevTools');
+        }).on('setTheme', (id: string) => {
+            if (MARKDOWN_THEMES.some(t => t.id === id)) {
+                this.context.globalState.update('markdownPreviewTheme', id);
+            }
         }).on('externalUpdate', () => scheduleRender())
             .on('fileChange', () => scheduleRender())
             .on('dispose', () => { if (renderTimer) clearTimeout(renderTimer); });
@@ -77,6 +82,10 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
         const body: string = renderMarkdownToHtml(text);
         const scrollTop = this.context.globalState.get(`scrollTop_${uri.fsPath}`, 0);
 
+        const savedTheme = this.context.globalState.get<string>('markdownPreviewTheme', DEFAULT_THEME_ID);
+        const themeId = MARKDOWN_THEMES.some(t => t.id === savedTheme) ? savedTheme : DEFAULT_THEME_ID;
+        const themesJson = JSON.stringify(MARKDOWN_THEMES);
+
         const asset = (p: string) =>
             webview.asWebviewUri(vscode.Uri.file(`${this.extensionPath}/resource/markdown/${p}`)).toString();
 
@@ -91,7 +100,7 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
             : '';
 
         return `<!DOCTYPE html>
-<html>
+<html data-theme="${themeId}">
 <head>
 <meta charset="utf-8">
 <base href="${baseUrl}/">
@@ -104,6 +113,7 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
 <script>
 (function(){
   const vscode = acquireVsCodeApi();
+  window.__mdPost = function(type, content){ vscode.postMessage({type:type, content:content}); };
   document.addEventListener('click', function(e){
     const a = e.target && e.target.closest ? e.target.closest('a') : null;
     if (!a) return;
@@ -126,6 +136,41 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
   function restore(){ window.scrollTo(0, ST); }
   restore();
   window.addEventListener('load', restore);   // 图片/KaTeX 加载后再次校正
+})();
+</script>
+<script>
+(function(){
+  const THEMES = ${themesJson};
+  const CURRENT = ${JSON.stringify(themeId)};
+  const btn = document.createElement('div');
+  btn.id = 'md-theme-btn'; btn.textContent = '🎨'; btn.title = '切换主题';
+  const panel = document.createElement('div'); panel.id = 'md-theme-panel';
+  const groups = [['light','亮色'],['dark','暗色']];
+  function markActive(id){
+    panel.querySelectorAll('.md-theme-item').forEach(function(el){
+      el.classList.toggle('active', el.getAttribute('data-id') === id);
+    });
+  }
+  groups.forEach(function(g){
+    const title = document.createElement('div');
+    title.className = 'md-theme-group-title'; title.textContent = g[1]; panel.appendChild(title);
+    THEMES.filter(function(t){ return t.group === g[0]; }).forEach(function(t){
+      const item = document.createElement('div');
+      item.className = 'md-theme-item'; item.textContent = t.name; item.setAttribute('data-id', t.id);
+      item.addEventListener('click', function(){
+        document.documentElement.setAttribute('data-theme', t.id);
+        markActive(t.id);
+        window.__mdPost && window.__mdPost('setTheme', t.id);
+        panel.classList.remove('open');
+      });
+      panel.appendChild(item);
+    });
+  });
+  btn.addEventListener('click', function(e){ e.stopPropagation(); panel.classList.toggle('open'); });
+  panel.addEventListener('click', function(e){ e.stopPropagation(); });
+  document.addEventListener('click', function(){ panel.classList.remove('open'); });
+  document.body.appendChild(btn); document.body.appendChild(panel);
+  markActive(CURRENT);
 })();
 </script>
 ${mermaidScript}
