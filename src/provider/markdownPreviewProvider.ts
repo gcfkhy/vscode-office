@@ -87,7 +87,7 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
 
         const hasMermaid = /class=["']mermaid["']/.test(body);
         const mermaidScript = hasMermaid
-            ? `<script src="${asset('mermaid.min.js')}"></script><script>mermaid.initialize({startOnLoad:true});</script>`
+            ? `<script src="${asset('mermaid.min.js')}"></script><script>mermaid.initialize({startOnLoad:false});mermaid.run();</script>`
             : '';
 
         return `<!DOCTYPE html>
