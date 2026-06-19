@@ -1,4 +1,4 @@
-# Office Viewer
+# Markdown Office Viewer
 
 [English](README.md) | [简体中文](README-CN.md) | 繁體中文
 
@@ -22,33 +22,14 @@
 
 ## Markdown
 
-整合 [Vditor](https://github.com/Vanessa219/vditor) 實現 Markdown 所見即所得編輯。**注意：此編輯器已不再積極維護。**
+開啟 `.md` / `.markdown` 檔案會顯示唯讀**預覽**（由 markdown-it 渲染：程式碼高亮、KaTeX 數學公式、Mermaid 圖、表格）。需要修改內容時請用 VS Code 原生文字編輯器（按右鍵 → *Open With… → 文字編輯器*，或 `Ctrl Alt E` / `⌘ ^ E` 切換）。
 
-如需使用 VS Code 原生 Markdown 編輯器，請在 `settings.json` 中新增以下設定：
+預覽右下角：
 
-```json
-{
-    "workbench.editorAssociations": {
-        "*.md": "default",
-        "*.markdown": "default"
-    }
-}
-```
+- 🎨 **主題** —— 在 18 套內建亮/暗主題間切換（Catppuccin、GitHub、Dracula、Nord、Tokyo Night、Solarized、Gruvbox……），選擇會被全域記住。
+- 📤 **匯出** —— 把預覽**所見即所得**匯出為 **PDF**、**HTML** 或**長圖（PNG）**。PDF 與長圖需要 Chromium 核心瀏覽器，若未自動找到可透過 `vscode-office.chromiumPath` 設定路徑。
 
-在編輯器中按右鍵，可將 Markdown 匯出為 PDF、DOCX 或 HTML。PDF 匯出依賴 Chromium，可透過 `vscode-office.chromiumPath` 設定瀏覽器路徑。
-
-![匯出 Markdown](image/README-CN/1685418034035.png)
-
-快捷鍵：基於 [Vditor 快捷鍵](shortcut.md)，以及：
-
-- 將清單上移一行: `Ctrl Alt I` / `⌘ ^ I`
-- 將清單下移一行: `Ctrl Alt J` / `⌘ ^ J`
-- 在 VS Code 中編輯: `Ctrl Alt E` / `⌘ ^ E`
-
-提示：
-
-- 可透過 Ctrl/Cmd + 滑鼠滾輪調整編輯器大小。
-- 按住 Ctrl/Meta + 點擊或雙擊可開啟超連結。
+也可透過編輯器標題列的匯出按鈕（PDF / HTML / DOCX）。
 
 ## 其他功能
 
@@ -68,7 +49,7 @@
 
 ## 使用資料（Usage Data）
 
-Office Viewer 會收集**匿名使用資料**，用於了解各預覽功能的使用情況，以便改進擴充功能。資料透過官方模組 [`@vscode/extension-telemetry`](https://www.npmjs.com/package/@vscode/extension-telemetry) 傳送至 [Azure Application Insights](https://learn.microsoft.com/zh-tw/azure/azure-monitor/app/app-insights-overview)。
+Markdown Office Viewer 會收集**匿名使用資料**，用於了解各預覽功能的使用情況，以便改進擴充功能。資料透過官方模組 [`@vscode/extension-telemetry`](https://www.npmjs.com/package/@vscode/extension-telemetry) 傳送至 [Azure Application Insights](https://learn.microsoft.com/zh-tw/azure/azure-monitor/app/app-insights-overview)。
 
 ### 收集內容
 
