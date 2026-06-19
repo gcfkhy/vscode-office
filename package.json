@@ -1,7 +1,7 @@
 {
-	"name": "vscode-office",
-	"displayName": "Office Viewer",
-	"description": "View word, excel, powerpoint files and using WYSIWYG editor for markdown.",
+	"name": "markdown-office-viewer",
+	"displayName": "Markdown Office Viewer",
+	"description": "View Office, PDF, image and archive files, with a themed Markdown preview and export.",
 	"version": "4.0.6",
 	"publisher": "cweijan",
 	"icon": "images/logo.png",
