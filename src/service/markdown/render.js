@@ -5,22 +5,22 @@ const markdownItMermaid = require("./ext/markdown-it-mermaid").default
 const markdownItPlantuml = require("markdown-it-plantuml")
 const markdownItToc = require("markdown-it-toc-done-right")
 const markdownItAnchor = require("markdown-it-anchor")
+const hljs = require("highlight.js")
 
 /**
  * 创建共享的 markdown-it 实例(预览与导出共用同一插件配置)。
  * @param {{ breaks?: boolean }} options
  */
 function createMarkdownIt(options = {}) {
-  const hljs = require("highlight.js")
-  let md
-  md = markdownIt({
+  const md = markdownIt({
     html: true,
-    breaks: options.breaks === true,
+    breaks: !!options.breaks,
     highlight: function (str, lang) {
       if (lang && hljs.getLanguage(lang)) {
         try {
           str = hljs.highlight(lang, str, true).value
         } catch (error) {
+          console.error("markdown-it highlight error:", error)
           str = md.utils.escapeHtml(str)
         }
       } else {

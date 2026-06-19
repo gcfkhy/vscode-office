@@ -7,6 +7,9 @@ assert.ok(/<h1[^>]*>Hello<\/h1>/.test(html), "应渲染 h1 标题")
 assert.ok(/class=['"]hljs['"]/.test(html), "代码块应带 hljs 类")
 assert.ok(/<table>/.test(html), "应渲染表格")
 
+const checkboxHtml = renderMarkdownToHtml("- [x] done\n")
+assert.ok(/type="checkbox"/.test(checkboxHtml), "checkbox 插件应生效")
+
 const fallback = renderMarkdownToHtml(null)
 assert.strictEqual(typeof fallback, "string", "空输入应返回字符串而非抛错")
 
