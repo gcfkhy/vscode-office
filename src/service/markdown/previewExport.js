@@ -51,8 +51,9 @@ async function exportPreview(options) {
     return outPath
   }
 
-  // pdf / png 需要 Chromium
-  const tmpFile = path.join(origin.dir, origin.name + "_export_tmp.html")
+  // pdf / png 需要 Chromium。临时 html 写到系统 temp(不污染 .md 目录);
+  // 图片相对路径靠 HTML 里的 <base href=file://mdDir/> 解析,与临时文件位置无关。
+  const tmpFile = path.join(os.tmpdir(), origin.name + "_export_" + process.pid + "_" + Date.now() + ".html")
   fs.writeFileSync(tmpFile, html, "utf-8")
   const puppeteer = require("puppeteer-core")
   // 显式指定临时配置目录:puppeteer 便不会在关闭时自动删除它,
@@ -107,7 +108,7 @@ async function exportPreview(options) {
   } finally {
     // 关闭与清理都设为非致命:产物已写出,清理失败不应让导出报错。
     try { await browser.close() } catch (e) { /* ignore 关闭错误 */ }
-    try { fs.unlinkSync(tmpFile) } catch (e) { /* ignore */ }
+    try { fs.rmSync(tmpFile, { force: true, maxRetries: 3 }) } catch (e) { /* ignore */ }
     try { fs.rmSync(profileDir, { recursive: true, force: true, maxRetries: 3 }) } catch (e) { /* ignore */ }
   }
   return outPath
