@@ -19,3 +19,9 @@ public/
 lib.js
 backlog.md
 yarn.lock
+docs/**
+.claude/**
+CLAUDE.md
+.cursorrules
+.cursor/**
+*.vsix
