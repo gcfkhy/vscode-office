@@ -25,8 +25,14 @@ for (const id of regIds) assert.ok(cssIds.includes(id), `themes.css 缺少主题
 for (const id of cssIds) assert.ok(regIds.includes(id), `注册表缺少 themes.css 中的主题: ${id}`)
 
 // 每个主题必须定义关键变量(防止漏定义继承串色)
-const required = ['--md-bg','--md-fg','--md-heading','--md-link','--md-pre-bg',
-                  '--md-ui-bg','--hl-comment','--hl-keyword','--hl-string','--hl-function']
+const required = [
+  '--md-bg','--md-fg','--md-muted','--md-heading','--md-heading-border','--md-link',
+  '--md-border','--md-code-fg','--md-code-bg','--md-pre-bg','--md-pre-border',
+  '--md-quote-fg','--md-quote-bg','--md-quote-border','--md-table-head-bg','--md-table-stripe',
+  '--md-ui-bg','--md-ui-border',
+  '--hl-comment','--hl-keyword','--hl-string','--hl-number','--hl-function',
+  '--hl-attr','--hl-class','--hl-meta','--hl-regexp','--hl-symbol'
+]
 for (const id of regIds) {
     for (const v of required) {
         assert.ok(bodyById[id].includes(v + ':'), `主题 ${id} 缺少变量 ${v}`)
