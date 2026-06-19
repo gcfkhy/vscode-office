@@ -76,3 +76,19 @@ html, body { margin:0; padding:0; background: var(--md-bg); }
 .md-theme-item:hover { background: var(--md-pre-bg); }
 .md-theme-item.active { background: var(--md-pre-bg); font-weight:600; }
 .md-theme-item.active::after { content:" ✓"; color: var(--md-link); }
+
+/* 右下角导出按钮(在主题钮左侧并排)*/
+#md-export-btn {
+  position: fixed; right:60px; bottom:16px; width:36px; height:36px; border-radius:50%;
+  background: var(--md-ui-bg); border:1px solid var(--md-ui-border); color: var(--md-fg);
+  display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer;
+  z-index:99999; opacity:0.8; user-select:none; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+}
+#md-export-btn:hover { opacity:1; }
+#md-export-panel {
+  position: fixed; right:60px; bottom:60px; display:none;
+  background: var(--md-ui-bg); border:1px solid var(--md-ui-border); border-radius:8px; padding:6px;
+  z-index:99999; min-width:140px; box-shadow:0 6px 24px rgba(0,0,0,0.35);
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+}
+#md-export-panel.open { display:block; }
