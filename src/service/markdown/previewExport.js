@@ -1,4 +1,5 @@
 const fs = require("fs")
+const os = require("os")
 const path = require("path")
 const { pathToFileURL } = require("url")
 const { renderMarkdownToHtml } = require("./render")
@@ -54,9 +55,13 @@ async function exportPreview(options) {
   const tmpFile = path.join(origin.dir, origin.name + "_export_tmp.html")
   fs.writeFileSync(tmpFile, html, "utf-8")
   const puppeteer = require("puppeteer-core")
+  // 显式指定临时配置目录:puppeteer 便不会在关闭时自动删除它,
+  // 从而避开 Windows 上常见的 EBUSY(临时 profile 文件被锁)未处理异常。
+  const profileDir = path.join(os.tmpdir(), "office-md-export-" + process.pid + "-" + Date.now())
   const browser = await puppeteer.launch({
     headless: true,
     executablePath: executablePath || undefined,
+    userDataDir: profileDir,
     args: ["--allow-file-access-from-files", ...(puppeteerArgs || [])]
   })
   try {
@@ -100,8 +105,10 @@ async function exportPreview(options) {
       }
     }
   } finally {
-    await browser.close()
+    // 关闭与清理都设为非致命:产物已写出,清理失败不应让导出报错。
+    try { await browser.close() } catch (e) { /* ignore 关闭错误 */ }
     try { fs.unlinkSync(tmpFile) } catch (e) { /* ignore */ }
+    try { fs.rmSync(profileDir, { recursive: true, force: true, maxRetries: 3 }) } catch (e) { /* ignore */ }
   }
   return outPath
 }
