@@ -11,6 +11,9 @@ import { Holder } from './markdown/holder';
 import { convertMd } from "./markdown/markdown-pdf";
 import { Global } from "@/common/global";
 
+// 主题化导出(CJS,require 避免 tsc 对 .js 缺声明报错)
+const { exportPreview: exportPreviewImpl } = require('./markdown/previewExport');
+
 export type ExportType = 'pdf' | 'html' | 'docx';
 
 interface ExportOption {
@@ -52,6 +55,28 @@ export class MarkdownService {
         });
         if (!pick) return;
         await this.exportMarkdown(uri, { type: pick as ExportType });
+    }
+
+    /** 右下角主题化导出:format = 'pdf' | 'html' | 'png',themeId = 当前预览主题。 */
+    public async exportPreview(uri: vscode.Uri, format: string, themeId: string) {
+        if (!['pdf', 'html', 'png'].includes(format)) return;
+        try {
+            if (format !== 'html') {
+                vscode.window.showInformationMessage(`Starting export preview to ${format}.`);
+            }
+            const out = await exportPreviewImpl({
+                markdownFilePath: uri.fsPath,
+                format,
+                themeId,
+                extensionPath: this.context.extensionPath,
+                executablePath: format === 'html' ? undefined : this.getChromiumPath(),
+                puppeteerArgs: this.getPuppeteerArgs(),
+            });
+            vscode.window.showInformationMessage(`Export preview to ${format} success: ${out}`);
+        } catch (error) {
+            Output.log(error);
+            vscode.window.showErrorMessage(`Export preview failed: ${error.message || error}`);
+        }
     }
 
     public getConfig(option: ExportOption) {
