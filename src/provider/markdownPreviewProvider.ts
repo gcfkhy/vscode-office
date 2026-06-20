@@ -77,7 +77,11 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
         }).on('exportPreview', (fmt: string) => {
             const themeId = this.context.globalState.get<string>('markdownPreviewTheme', DEFAULT_THEME_ID);
             new MarkdownService(this.context).exportPreview(uri, fmt, themeId);
-        }).on('refresh', () => { lastText = undefined; render(); })
+        }).on('refresh', () => {
+            const text = this.readText(uri);
+            if (text === lastText) { handler.emit('refreshNoop'); }      // 内容未变:不重载,提示即可
+            else { lastText = text; webview.html = this.buildHtml(webview, uri, folderPath, text); }
+        })
             .on('setZoom', (z: number) => { this.context.globalState.update('markdownPreviewZoom', typeof z === 'number' ? z : 1); })
             .on('externalUpdate', () => scheduleRender())
             .on('fileChange', () => scheduleRender())
@@ -181,6 +185,21 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
   function restore(){ window.scrollTo(0, ST); }
   restore();
   window.addEventListener('load', restore);   // 图片/KaTeX 加载后再次校正
+
+  // 通用中央提示(短暂):供"已刷新,无需重复加载"等使用
+  var centerToast = document.createElement('div');
+  centerToast.id = 'md-toast';
+  if (document.body) document.body.appendChild(centerToast);
+  var toastTimer;
+  function showToast(msg){
+    centerToast.textContent = msg;
+    centerToast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ centerToast.classList.remove('show'); }, 1500);
+  }
+  window.addEventListener('message', function(e){
+    if (e && e.data && e.data.type === 'refreshNoop'){ showToast('已刷新，无需重复加载'); }
+  });
 })();
 </script>
 <script>
@@ -239,9 +258,10 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
   refreshBtn.addEventListener('click', function(e){
     e.stopPropagation();
     themePanel.classList.remove('open'); exportPanel.classList.remove('open');
-    refreshBtn.classList.add('spinning');
+    refreshBtn.classList.remove('spinning'); void refreshBtn.offsetWidth; refreshBtn.classList.add('spinning');
     window.__mdPost && window.__mdPost('refresh');
   });
+  refreshBtn.addEventListener('animationend', function(){ refreshBtn.classList.remove('spinning'); });
 
   // 缩放按钮:缩小 / 放大(与 Ctrl/⌘ + 滚轮同效)
   const zoomOutBtn = document.createElement('div');
