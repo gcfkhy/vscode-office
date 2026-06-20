@@ -56,16 +56,16 @@ html, body { margin:0; padding:0; background: var(--md-bg); }
 .hljs-doctag,.hljs-strong { font-weight:bold; }
 .hljs-emphasis { font-style:italic; }
 
-/* 右下角主题切换器 */
+/* 右下角悬浮按钮组(从右到左:刷新 16 / 放大 60 / 缩小 104 / 导出 148 / 主题 192)*/
 #md-theme-btn {
-  position: fixed; right:16px; bottom:16px; width:36px; height:36px; border-radius:50%;
+  position: fixed; right:192px; bottom:16px; width:36px; height:36px; border-radius:50%;
   background: var(--md-ui-bg); border:1px solid var(--md-ui-border); color: var(--md-fg);
   display:flex; align-items:center; justify-content:center; font-size:17px; cursor:pointer;
   z-index:99999; opacity:0.8; user-select:none; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
 }
 #md-theme-btn:hover { opacity:1; }
 #md-theme-panel {
-  position: fixed; right:16px; bottom:60px; max-height:60vh; overflow:auto; display:none;
+  position: fixed; right:192px; bottom:60px; max-height:60vh; overflow:auto; display:none;
   background: var(--md-ui-bg); border:1px solid var(--md-ui-border); border-radius:8px; padding:6px;
   z-index:99999; min-width:170px; box-shadow:0 6px 24px rgba(0,0,0,0.35);
   -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
@@ -79,23 +79,34 @@ html, body { margin:0; padding:0; background: var(--md-bg); }
 
 /* 右下角导出按钮(在主题钮左侧并排)*/
 #md-export-btn {
-  position: fixed; right:60px; bottom:16px; width:36px; height:36px; border-radius:50%;
+  position: fixed; right:148px; bottom:16px; width:36px; height:36px; border-radius:50%;
   background: var(--md-ui-bg); border:1px solid var(--md-ui-border); color: var(--md-fg);
   display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer;
   z-index:99999; opacity:0.8; user-select:none; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
 }
 #md-export-btn:hover { opacity:1; }
 #md-export-panel {
-  position: fixed; right:60px; bottom:60px; display:none;
+  position: fixed; right:148px; bottom:60px; display:none;
   background: var(--md-ui-bg); border:1px solid var(--md-ui-border); border-radius:8px; padding:6px;
   z-index:99999; min-width:140px; box-shadow:0 6px 24px rgba(0,0,0,0.35);
   -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
 }
 #md-export-panel.open { display:block; }
 
-/* 右下角刷新按钮(在导出钮左侧并排,兜底手动刷新)*/
+/* 缩小 / 放大 按钮 */
+#md-zoomout-btn, #md-zoomin-btn {
+  position: fixed; bottom:16px; width:36px; height:36px; border-radius:50%;
+  background: var(--md-ui-bg); border:1px solid var(--md-ui-border); color: var(--md-fg);
+  display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer;
+  z-index:99999; opacity:0.8; user-select:none; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+}
+#md-zoomout-btn { right:104px; }
+#md-zoomin-btn { right:60px; }
+#md-zoomout-btn:hover, #md-zoomin-btn:hover { opacity:1; }
+
+/* 刷新按钮(最右下角,永远在最前)*/
 #md-refresh-btn {
-  position: fixed; right:104px; bottom:16px; width:36px; height:36px; border-radius:50%;
+  position: fixed; right:16px; bottom:16px; width:36px; height:36px; border-radius:50%;
   background: var(--md-ui-bg); border:1px solid var(--md-ui-border); color: var(--md-fg);
   display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer;
   z-index:99999; opacity:0.8; user-select:none; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
@@ -103,3 +114,13 @@ html, body { margin:0; padding:0; background: var(--md-bg); }
 #md-refresh-btn:hover { opacity:1; }
 #md-refresh-btn.spinning { animation: md-spin 0.6s linear; }
 @keyframes md-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* 缩放倍数提示(正文中央短暂显示,点击还原 100%)*/
+#md-zoom-indicator {
+  position: fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+  padding:10px 22px; border-radius:10px; font-size:24px; font-weight:600; line-height:1;
+  background: var(--md-ui-bg); color: var(--md-fg); border:1px solid var(--md-ui-border);
+  box-shadow:0 6px 24px rgba(0,0,0,0.35); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  z-index:100000; opacity:0; pointer-events:none; transition:opacity 0.18s; user-select:none;
+}
+#md-zoom-indicator.show { opacity:0.95; pointer-events:auto; cursor:pointer; }

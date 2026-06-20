@@ -78,6 +78,7 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
             const themeId = this.context.globalState.get<string>('markdownPreviewTheme', DEFAULT_THEME_ID);
             new MarkdownService(this.context).exportPreview(uri, fmt, themeId);
         }).on('refresh', () => { lastText = undefined; render(); })
+            .on('setZoom', (z: number) => { this.context.globalState.update('markdownPreviewZoom', typeof z === 'number' ? z : 1); })
             .on('externalUpdate', () => scheduleRender())
             .on('fileChange', () => scheduleRender())
             .on('dispose', () => { if (renderTimer) clearTimeout(renderTimer); fileWatcher.dispose(); });
@@ -93,6 +94,7 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
     private buildHtml(webview: vscode.Webview, uri: vscode.Uri, folderPath: vscode.Uri, text: string): string {
         const body: string = renderMarkdownToHtml(text);
         const scrollTop = this.context.globalState.get(`scrollTop_${uri.fsPath}`, 0);
+        const savedZoom = this.context.globalState.get('markdownPreviewZoom', 1);
 
         const savedTheme = this.context.globalState.get<string>('markdownPreviewTheme', DEFAULT_THEME_ID);
         const themeId = MARKDOWN_THEMES.some(t => t.id === savedTheme) ? savedTheme : DEFAULT_THEME_ID;
@@ -126,6 +128,37 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
 (function(){
   const vscode = acquireVsCodeApi();
   window.__mdPost = function(type, content){ vscode.postMessage({type:type, content:content}); };
+
+  // 缩放:Ctrl/⌘ + 滚轮 与右下角 +/- 按钮,作用于正文,全局记忆
+  var ZOOM = ${savedZoom};
+  var MDBODY = document.querySelector('.md-body');
+  function applyZoom(){ if (MDBODY) MDBODY.style.zoom = String(ZOOM); }
+  // 缩放倍数提示:正文中央短暂显示当前 %,点击可还原 100%
+  var zoomTip = document.createElement('div');
+  zoomTip.id = 'md-zoom-indicator'; zoomTip.title = '点击还原 100%';
+  zoomTip.addEventListener('click', function(){ window.__mdSetZoom(1); });
+  var zoomTipTimer;
+  zoomTip.addEventListener('mouseenter', function(){ clearTimeout(zoomTipTimer); });
+  zoomTip.addEventListener('mouseleave', function(){ clearTimeout(zoomTipTimer); zoomTipTimer = setTimeout(function(){ zoomTip.classList.remove('show'); }, 700); });
+  if (document.body) document.body.appendChild(zoomTip);
+  function showZoomTip(){
+    zoomTip.textContent = Math.round(ZOOM * 100) + '%';
+    zoomTip.classList.add('show');
+    clearTimeout(zoomTipTimer);
+    zoomTipTimer = setTimeout(function(){ zoomTip.classList.remove('show'); }, 1200);
+  }
+  window.__mdSetZoom = function(z){
+    ZOOM = Math.min(3, Math.max(0.5, Math.round(z * 100) / 100));
+    applyZoom();
+    showZoomTip();
+    vscode.postMessage({ type: 'setZoom', content: ZOOM });
+  };
+  window.__mdZoomBy = function(d){ window.__mdSetZoom(ZOOM + d); };
+  applyZoom();
+  window.addEventListener('wheel', function(e){
+    if (e.ctrlKey || e.metaKey){ e.preventDefault(); window.__mdZoomBy(e.deltaY < 0 ? 0.1 : -0.1); }
+  }, { passive: false });
+
   document.addEventListener('click', function(e){
     const a = e.target && e.target.closest ? e.target.closest('a') : null;
     if (!a) return;
@@ -210,8 +243,17 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
     window.__mdPost && window.__mdPost('refresh');
   });
 
+  // 缩放按钮:缩小 / 放大(与 Ctrl/⌘ + 滚轮同效)
+  const zoomOutBtn = document.createElement('div');
+  zoomOutBtn.id = 'md-zoomout-btn'; zoomOutBtn.textContent = '➖'; zoomOutBtn.title = '缩小 (Ctrl/⌘ + 滚轮)';
+  zoomOutBtn.addEventListener('click', function(e){ e.stopPropagation(); themePanel.classList.remove('open'); exportPanel.classList.remove('open'); window.__mdZoomBy && window.__mdZoomBy(-0.1); });
+  const zoomInBtn = document.createElement('div');
+  zoomInBtn.id = 'md-zoomin-btn'; zoomInBtn.textContent = '➕'; zoomInBtn.title = '放大 (Ctrl/⌘ + 滚轮)';
+  zoomInBtn.addEventListener('click', function(e){ e.stopPropagation(); themePanel.classList.remove('open'); exportPanel.classList.remove('open'); window.__mdZoomBy && window.__mdZoomBy(0.1); });
+
   document.body.appendChild(themeBtn); document.body.appendChild(themePanel);
   document.body.appendChild(exportBtn); document.body.appendChild(exportPanel);
+  document.body.appendChild(zoomOutBtn); document.body.appendChild(zoomInBtn);
   document.body.appendChild(refreshBtn);
   markActive(CURRENT);
 })();

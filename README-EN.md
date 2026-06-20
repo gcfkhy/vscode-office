@@ -16,6 +16,7 @@ This extension inherits all of the original's file-preview features. The differe
 | Preview themes | None | **18 built-in** light/dark palettes (Catppuccin, GitHub, Dracula, Nord, Tokyo Night, Solarized, Gruvbox, …), switch from the bottom-right, remembered globally |
 | Export | Title-bar PDF / DOCX / HTML only | Adds bottom-right **WYSIWYG** export: **PDF (single page, no pagination) / HTML / long image (PNG)**, matching the current theme |
 | Auto-refresh | — | Preview **auto-refreshes** when the file changes externally, plus a 🔄 manual refresh button as a fallback |
+| Zoom | — | `Ctrl/⌘ + wheel` and ➕/➖ buttons zoom the content; the current % flashes center-screen, click to reset, remembered globally |
 | Icon & name | Office Viewer | New Catppuccin-style icon, renamed to Markdown Office Viewer |
 
 > All non-Markdown previews (Office / PDF / images / fonts / archives …) are inherited from the original and behave essentially the same.
@@ -24,9 +25,10 @@ This extension inherits all of the original's file-preview features. The differe
 
 Opening a `.md` / `.markdown` file shows a read-only preview rendered with **markdown-it** (code highlighting, KaTeX math, Mermaid diagrams, tables). To edit, use VS Code's native text editor (right-click → *Open With… → Text Editor*, or `Ctrl Alt E` / `⌘ ^ E` to toggle).
 
-Three buttons in the bottom-right of the preview:
+Floating buttons in the bottom-right of the preview (right to left: refresh / zoom-in / zoom-out / export / theme):
 
 - 🔄 **Refresh** — force a re-read and re-render of the current file; a fallback for when auto-refresh doesn't fire.
+- ➕ / ➖ **Zoom** — zoom the content in/out (also `Ctrl/⌘ + wheel`); the current percentage flashes in the center (e.g. `120%`), click it to reset to 100%. Remembered globally.
 - 📤 **Export** — export the preview **as you see it** to **PDF / HTML / long image (PNG)**, matching the current theme. PDF and PNG need a Chromium-based browser; set its path with `vscode-office.chromiumPath` if it isn't found automatically.
 - 🎨 **Theme** — switch between 18 light/dark palettes; your choice is remembered globally.
 
