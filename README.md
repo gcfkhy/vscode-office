@@ -1,91 +1,78 @@
 # Markdown Office Viewer
 
-English | [简体中文](README-CN.md) | [繁體中文](README-TW.md)
+简体中文 | [English](README-EN.md) | [繁體中文](README-TW.md)
 
-## Introduction
+一个以 **Markdown 阅读体验** 为核心的 VS Code 文件预览扩展。在保留 Office / PDF / 图片 / 压缩包等多种文件预览能力的同时，把 Markdown 预览彻底重做成了一个轻量、主题丰富、可一键导出的阅读器。
 
-This extension lets you preview and edit common office and design files directly in VS Code.
+> 本项目 fork 自 [cweijan/vscode-office](https://github.com/cweijan/vscode-office)（Office Viewer），在其文件预览能力之上重做了 Markdown 体验。
 
-- Excel: `.xls`, `.xlsx`, `.xlsm`, `.csv`, `.ods`
-- Word: `.docx`, `.dotx`
-- PowerPoint: `.pptx`, `.pptm`
-- PDF & eBook: `.pdf`, `.epub`
-- HEIC/TIFF: `.heic`, `.heif`, `.tiff`
-- Design: `.psd`, `.xmind`, `.icns`, `.svg`
-- Font: `.ttf`, `.otf`, `.woff`, `.woff2`
-- Markdown: `.md`, `.markdown`
-- HTML: `.html`, `.htm`
-- HTTP request: `.http`, `.rest`
-- Windows Registry: `.reg`
-- Java: `.class` (decompiler)
-- Compressed files: `.zip`, `.jar`, `.vsix`, `.rar`, `.7z`, `.tar`, `.tar.gz`, `.tgz`, `.apk`
+## 与原版 Office Viewer 的区别
+
+本扩展继承了原版的全部文件预览能力，差异主要集中在 **Markdown** 和整体定位上：
+
+| 方面 | 原版 Office Viewer | Markdown Office Viewer（本项目） |
+|------|-------------------|-------------------------------|
+| Markdown 引擎 | Vditor 所见即所得编辑器（上游已停止维护） | markdown-it 只读预览，专注阅读；编辑交回 VS Code 原生编辑器 |
+| 预览主题 | 无 | 内置 **18 套**亮/暗主题（Catppuccin、GitHub、Dracula、Nord、Tokyo Night、Solarized、Gruvbox……），右下角一键切换、全局记忆 |
+| 导出 | 仅标题栏 PDF / DOCX / HTML | 额外提供右下角**所见即所得**导出：**PDF（单页不分页）/ HTML / 长图（PNG）**，外观还原当前主题 |
+| 自动刷新 | — | 文件被外部修改时预览**自动刷新**，并提供 🔄 手动刷新按钮兜底 |
+| 图标与名称 | Office Viewer | 全新 Catppuccin 风格图标，更名为 Markdown Office Viewer |
+
+> 除 Markdown 外的 Office / PDF / 图片 / 字体 / 压缩包等预览功能均继承自原版，行为基本一致。
 
 ## Markdown
 
-Opening a `.md` / `.markdown` file shows a read-only **preview** rendered with markdown-it (code highlighting, KaTeX math, Mermaid diagrams, tables). Edit the source in VS Code's normal text editor (right-click → *Open With… → Text Editor*, or `Ctrl Alt E` / `⌘ ^ E` to toggle).
+打开 `.md` / `.markdown` 会显示由 **markdown-it** 渲染的只读预览，支持代码高亮、KaTeX 数学公式、Mermaid 图表、表格等。需要编辑时，请用 VS Code 原生文本编辑器（右键 → *Open With… → Text Editor*，或 `Ctrl Alt E` / `⌘ ^ E` 切换）。
 
-In the bottom-right of the preview:
+预览右下角有三个按钮：
 
-- 🎨 **Theme** — switch between 18 built-in light/dark palettes (Catppuccin, GitHub, Dracula, Nord, Tokyo Night, Solarized, Gruvbox, …). Your choice is remembered globally.
-- 📤 **Export** — export the preview **as you see it** to **PDF**, **HTML**, or a **long image (PNG)**. PDF and PNG need a Chromium-based browser; set its path with `vscode-office.chromiumPath` if it isn't found automatically.
+- 🔄 **刷新** —— 强制重新读取并渲染当前文件，作为自动刷新失效时的兜底。
+- 📤 **导出** —— 把预览**所见即所得**导出为 **PDF / HTML / 长图（PNG）**，外观与当前主题一致。PDF 与长图需要 Chromium 内核浏览器，若未自动找到可用 `vscode-office.chromiumPath` 指定路径。
+- 🎨 **主题** —— 在 18 套亮/暗主题间切换，选择会被全局记住。
 
-You can also export from the editor title-bar button (PDF / HTML / DOCX).
+文件在外部被修改后预览会**自动刷新**（基于精确的文件监听，覆盖外部编辑器与原子保存）。此外也可通过编辑器标题栏按钮导出 PDF / HTML / DOCX。
 
-## Other features
+## 支持的文件类型
 
-- HTML: live preview while editing; press `Ctrl+Shift+V` to open the live view
-- Git History: browse commit graph, view file history, compare revisions, and perform common Git operations from the Source Control view or file context menu
-- YAML: document outline and anchor navigation (Go to Definition for alias references)
-- Icon theme: includes a subset of [Material Icon Theme](https://github.com/PKief/vscode-material-icon-theme) icons, plus **Office Material Icon Theme** and **One Dark Modern** color themes
-- Excel: preview and save `.xlsx`, `.xls`, `.xlsm`, `.csv`, and `.ods` files (saving `.xlsx` may lose formatting; `.csv` does not support GBK-encoded Chinese)
-- HTTP: send requests from `.http` and `.rest` files (integrated from [REST Client](https://github.com/Huachao/vscode-restclient) with fixes for local request issues); press `Ctrl+Enter` / `⌘ Enter` to send
-- Java: decompile and view `.class` files
+以下文件均可直接在 VS Code 中预览：
 
-## Sponsor
+- Excel: `.xls`、`.xlsx`、`.xlsm`、`.csv`、`.ods`
+- Word: `.docx`、`.dotx`
+- PowerPoint: `.pptx`、`.pptm`
+- PDF 与电子书: `.pdf`、`.epub`
+- HEIC/TIFF: `.heic`、`.heif`、`.tiff`
+- 设计文件: `.psd`、`.xmind`、`.icns`、`.svg`
+- 字体: `.ttf`、`.otf`、`.woff`、`.woff2`
+- Markdown: `.md`、`.markdown`
+- HTML: `.html`、`.htm`
+- HTTP 请求: `.http`、`.rest`
+- Windows 注册表: `.reg`
+- Java: `.class`（反编译）
+- 压缩文件: `.zip`、`.jar`、`.vsix`、`.rar`、`.7z`、`.tar`、`.tar.gz`、`.tgz`、`.apk`
 
-[![Database Client](https://database-client.com/text_logo.png)](https://marketplace.visualstudio.com/items?itemName=cweijan.vscode-database-client2)
+## 其他功能
 
-Database Client for Visual Studio Code, supporting the management of **MySQL/MariaDB, PostgreSQL, SQLite, Redis**, and **ElasticSearch**, and works as an **SSH** client to boost your productivity! [Get it now](https://marketplace.visualstudio.com/items?itemName=cweijan.vscode-database-client2).
-
-## Usage data
-
-Markdown Office Viewer collects **anonymous usage data** to understand which preview features are used, so we can improve the extension. Data is sent to [Azure Application Insights](https://learn.microsoft.com/azure/azure-monitor/app/app-insights-overview) via the official [`@vscode/extension-telemetry`](https://www.npmjs.com/package/@vscode/extension-telemetry) module.
-
-### What we collect
-
-| Event | When | Properties |
-|-------|------|------------|
-| `view.open` | A custom preview/editor is opened | `viewType` (e.g. `excel`, `markdown`, `pdf`), `fileType` (extension only, e.g. `xlsx`, `md`) |
-| `gitHistory.view` | Git History is opened | `mode`: `repo` or `file` |
-
-We **do not** collect file paths, file names, URLs, repository names, request contents, or other personally identifiable information.
-
-### How to opt out
-
-Telemetry is sent only when **both** of the following allow it:
-
-1. VS Code global telemetry is enabled (`telemetry.telemetryLevel` is not `off`, or `telemetry.enableTelemetry` is `true` on older versions).
-2. Extension telemetry is enabled: set `vscode-office.enableTelemetry` to `false` in Settings.
-
-You can also disable all VS Code telemetry in **Settings → Application → Telemetry**.
-
-### Maintainer setup
-
-If you build and publish this extension yourself, see [docs/telemetry.md](docs/telemetry.md) for Azure Application Insights setup and sample queries.
+- **HTML**：编辑时按 `Ctrl+Shift+V` 实时预览
+- **Git 历史**：在源代码管理视图或文件右键菜单中浏览提交图、查看文件历史、对比修订并执行常用 Git 操作
+- **YAML**：文档大纲与锚点导航（别名引用可跳转到定义）
+- **图标主题**：内置 [Material Icon Theme](https://github.com/PKief/vscode-material-icon-theme) 部分图标，并提供 Office Material Icon Theme 与 One Dark Modern 配色主题
+- **Excel**：预览并保存 `.xlsx`、`.xls`、`.xlsm`、`.csv`、`.ods`（保存 `.xlsx` 可能丢失格式；`.csv` 不支持 GBK 编码中文）
+- **HTTP**：在 `.http` / `.rest` 文件中发送请求（集成自 [REST Client](https://github.com/Huachao/vscode-restclient) 并修复了本地请求问题），按 `Ctrl+Enter` / `⌘ Enter` 发送
+- **Java**：反编译并查看 `.class` 文件
 
 ## Credits
 
-- PDF rendering: [mozilla/pdf.js](https://github.com/mozilla/pdf.js/)
-- DOCX rendering: [VolodymyrBaydalka/docxjs](https://github.com/VolodymyrBaydalka/docxjs)
-- PPTX rendering: [pptxviewjs](https://www.npmjs.com/package/pptxviewjs)
-- XLSX rendering:
-  - [SheetJS/sheetjs](https://github.com/SheetJS/sheetjs): XLSX parsing
-  - [myliang/x-spreadsheet](https://github.com/myliang/x-spreadsheet): XLSX rendering
-- EPUB: [futurepress/epub.js](https://github.com/futurepress/epub.js)
-- PSD: [ag-psd](https://github.com/Agamnentzar/ag-psd)
-- XMind: [mind-elixir](https://github.com/ssshooter/mind-elixir-core), [@mind-elixir/import-xmind](https://github.com/ssshooter/mind-elixir-core)
-- HEIC conversion: [heic2any](https://github.com/alexcorvi/heic2any)
-- Java decompiler: [JetBrains/java-decompiler](https://github.com/JetBrains/intellij-community/tree/master/plugins/java-decompiler/engine)
-- HTTP: [REST Client](https://github.com/Huachao/vscode-restclient)
-- Markdown: [markdown-it](https://github.com/markdown-it/markdown-it)
-- Material Icon theme: [PKief/vscode-material-icon-theme](https://github.com/PKief/vscode-material-icon-theme)
+本项目基于 [cweijan/vscode-office](https://github.com/cweijan/vscode-office)，感谢原作者；同时感谢以下开源项目：
+
+- PDF 渲染：[mozilla/pdf.js](https://github.com/mozilla/pdf.js/)
+- DOCX 渲染：[VolodymyrBaydalka/docxjs](https://github.com/VolodymyrBaydalka/docxjs)
+- PPTX 渲染：[pptxviewjs](https://www.npmjs.com/package/pptxviewjs)
+- XLSX：[SheetJS/sheetjs](https://github.com/SheetJS/sheetjs)（解析）、[myliang/x-spreadsheet](https://github.com/myliang/x-spreadsheet)（渲染）
+- EPUB：[futurepress/epub.js](https://github.com/futurepress/epub.js)
+- PSD：[ag-psd](https://github.com/Agamnentzar/ag-psd)
+- XMind：[mind-elixir](https://github.com/ssshooter/mind-elixir-core)、[@mind-elixir/import-xmind](https://github.com/ssshooter/mind-elixir-core)
+- HEIC 转换：[heic2any](https://github.com/alexcorvi/heic2any)
+- Java 反编译：[JetBrains/java-decompiler](https://github.com/JetBrains/intellij-community/tree/master/plugins/java-decompiler/engine)
+- HTTP：[REST Client](https://github.com/Huachao/vscode-restclient)
+- Markdown：[markdown-it](https://github.com/markdown-it/markdown-it)
+- 图标主题：[PKief/vscode-material-icon-theme](https://github.com/PKief/vscode-material-icon-theme)
