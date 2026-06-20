@@ -92,3 +92,14 @@ html, body { margin:0; padding:0; background: var(--md-bg); }
   -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
 }
 #md-export-panel.open { display:block; }
+
+/* 右下角刷新按钮(在导出钮左侧并排,兜底手动刷新)*/
+#md-refresh-btn {
+  position: fixed; right:104px; bottom:16px; width:36px; height:36px; border-radius:50%;
+  background: var(--md-ui-bg); border:1px solid var(--md-ui-border); color: var(--md-fg);
+  display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer;
+  z-index:99999; opacity:0.8; user-select:none; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+}
+#md-refresh-btn:hover { opacity:1; }
+#md-refresh-btn.spinning { animation: md-spin 0.6s linear; }
+@keyframes md-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

@@ -51,6 +51,13 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
         };
         render();
 
+        // handler 自带的 fileChange watcher 用 fsPath 作 glob,对工作区外/Windows 路径不可靠;
+        // 改用 RelativePattern 精确监听该文件,覆盖外部编辑与原子保存(写临时文件再 rename)。
+        const fileName = uri.path.split('/').pop() || '*';
+        const fileWatcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(folderPath, fileName));
+        fileWatcher.onDidChange(() => scheduleRender());
+        fileWatcher.onDidCreate(() => scheduleRender());
+
         handler.on('openLink', (link: string) => {
             const resReg = /https:\/\/file.*\.net/i;
             if (link && link.match(resReg)) {
@@ -70,9 +77,10 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
         }).on('exportPreview', (fmt: string) => {
             const themeId = this.context.globalState.get<string>('markdownPreviewTheme', DEFAULT_THEME_ID);
             new MarkdownService(this.context).exportPreview(uri, fmt, themeId);
-        }).on('externalUpdate', () => scheduleRender())
+        }).on('refresh', () => { lastText = undefined; render(); })
+            .on('externalUpdate', () => scheduleRender())
             .on('fileChange', () => scheduleRender())
-            .on('dispose', () => { if (renderTimer) clearTimeout(renderTimer); });
+            .on('dispose', () => { if (renderTimer) clearTimeout(renderTimer); fileWatcher.dispose(); });
     }
 
     /** 优先读已打开的文本文档(反映原生编辑器未保存的改动),否则读磁盘。 */
@@ -192,8 +200,19 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
   exportPanel.addEventListener('click', function(e){ e.stopPropagation(); });
   document.addEventListener('click', function(){ themePanel.classList.remove('open'); exportPanel.classList.remove('open'); });
 
+  // 手动刷新(兜底:自动刷新失败时强制重载最新内容)
+  const refreshBtn = document.createElement('div');
+  refreshBtn.id = 'md-refresh-btn'; refreshBtn.textContent = '🔄'; refreshBtn.title = '刷新预览';
+  refreshBtn.addEventListener('click', function(e){
+    e.stopPropagation();
+    themePanel.classList.remove('open'); exportPanel.classList.remove('open');
+    refreshBtn.classList.add('spinning');
+    window.__mdPost && window.__mdPost('refresh');
+  });
+
   document.body.appendChild(themeBtn); document.body.appendChild(themePanel);
   document.body.appendChild(exportBtn); document.body.appendChild(exportPanel);
+  document.body.appendChild(refreshBtn);
   markActive(CURRENT);
 })();
 </script>
