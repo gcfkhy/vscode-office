@@ -3,7 +3,7 @@
 	"displayName": "Markdown Office Viewer",
 	"description": "View Office, PDF, image and archive files, with a themed Markdown preview and export.",
 	"version": "1.0.0",
-	"publisher": "cweijan",
+	"publisher": "markdown-office-viewer",
 	"icon": "images/logo.png",
 	"engines": {
 		"vscode": "^1.64.0"
