@@ -74,9 +74,11 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
             if (MARKDOWN_THEMES.some(t => t.id === id)) {
                 this.context.globalState.update('markdownPreviewTheme', id);
             }
-        }).on('exportPreview', (fmt: string) => {
+        }).on('exportPreview', async (fmt: string) => {
             const themeId = this.context.globalState.get<string>('markdownPreviewTheme', DEFAULT_THEME_ID);
-            new MarkdownService(this.context).exportPreview(uri, fmt, themeId);
+            // 进行中浮层已由 webview 点击时即时显示;这里 await 真正写出文件后再回执完成/失败。
+            const result = await new MarkdownService(this.context).exportPreview(uri, fmt, themeId);
+            handler.emit('exportDone', result);
         }).on('refresh', () => {
             const text = this.readText(uri);
             if (text === lastText) { handler.emit('refreshNoop'); }      // 内容未变:不重载,提示即可
@@ -197,8 +199,23 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function(){ centerToast.classList.remove('show'); }, 1500);
   }
+  // 导出进行中:中央浮层持续显示(不设消失定时器),直到收到 host 的 exportDone 回执
+  window.__mdExportStart = function(label){
+    clearTimeout(toastTimer);
+    centerToast.textContent = '正在导出 ' + label + '…';
+    centerToast.classList.add('show');
+  };
   window.addEventListener('message', function(e){
-    if (e && e.data && e.data.type === 'refreshNoop'){ showToast('已刷新，无需重复加载'); }
+    if (!e || !e.data) return;
+    if (e.data.type === 'refreshNoop'){ showToast('已刷新，无需重复加载'); return; }
+    if (e.data.type === 'exportDone'){
+      var d = e.data.content || {};
+      clearTimeout(toastTimer);
+      centerToast.textContent = d.ok ? ('导出完成：' + (d.name || '')) : ('导出失败：' + (d.message || '未知错误'));
+      centerToast.classList.add('show');
+      // 成功停留 1.5s;失败停留 3s(便于看清原因)后淡出
+      toastTimer = setTimeout(function(){ centerToast.classList.remove('show'); }, d.ok ? 1500 : 3000);
+    }
   });
 })();
 </script>
@@ -240,6 +257,7 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
     const item = document.createElement('div');
     item.className = 'md-theme-item'; item.textContent = f[1];
     item.addEventListener('click', function(){
+      window.__mdExportStart && window.__mdExportStart(f[1]);
       window.__mdPost && window.__mdPost('exportPreview', f[0]);
       exportPanel.classList.remove('open');
     });

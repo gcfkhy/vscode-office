@@ -2,7 +2,7 @@
 	"name": "markdown-office-viewer-pro",
 	"displayName": "Markdown Office Viewer Pro",
 	"description": "View Office, PDF, image and archive files, with a themed Markdown preview and export.",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"publisher": "markdown-office-viewer",
 	"icon": "images/logo.png",
 	"engines": {
@@ -790,7 +790,7 @@
 	"scripts": {
 		"dev": "vite --mode=development",
 		"lint:fix": "eslint src/**/*.ts --fix",
-		"build": "rm -rf out && vite build --mode=production",
+		"build": "node -e \"require('fs').rmSync('out',{recursive:true,force:true})\" && vite build --mode=production",
 		"package": "vsce package --no-dependencies",
 		"publish": "vsce publish --no-dependencies && ovsx publish --no-dependencies",
 		"vscode:prepublish": "npm run build"

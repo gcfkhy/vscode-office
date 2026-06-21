@@ -57,13 +57,17 @@ export class MarkdownService {
         await this.exportMarkdown(uri, { type: pick as ExportType });
     }
 
-    /** 右下角主题化导出:format = 'pdf' | 'html' | 'png',themeId = 当前预览主题。 */
-    public async exportPreview(uri: vscode.Uri, format: string, themeId: string) {
-        if (!['pdf', 'html', 'png'].includes(format)) return;
+    /**
+     * 主题化导出:format = 'pdf' | 'html' | 'png',themeId = 当前预览主题。
+     * 不再弹 VS Code 右下角通知 —— 返回结果交由 webview 端在预览中央浮层展示
+     * (进行中浮层由 webview 点击时即时显示,这里只负责完成/失败的回执)。
+     */
+    public async exportPreview(uri: vscode.Uri, format: string, themeId: string):
+        Promise<{ ok: boolean; name?: string; message?: string }> {
+        if (!['pdf', 'html', 'png'].includes(format)) {
+            return { ok: false, message: `不支持的导出格式: ${format}` };
+        }
         try {
-            if (format !== 'html') {
-                vscode.window.showInformationMessage(`Starting export preview to ${format}.`);
-            }
             const out = await exportPreviewImpl({
                 markdownFilePath: uri.fsPath,
                 format,
@@ -72,10 +76,11 @@ export class MarkdownService {
                 executablePath: format === 'html' ? undefined : this.getChromiumPath(),
                 puppeteerArgs: this.getPuppeteerArgs(),
             });
-            vscode.window.showInformationMessage(`Export preview to ${format} success: ${out}`);
+            return { ok: true, name: parse(out).base };
         } catch (error) {
+            // 完整错误栈写入 Output 面板,中央浮层只展示简短原因
             Output.log(error && error.stack ? error.stack : error);
-            vscode.window.showErrorMessage(`导出 ${format} 失败: ${(error && error.message) || error}`);
+            return { ok: false, message: (error && error.message) || String(error) };
         }
     }
 
