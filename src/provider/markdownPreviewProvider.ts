@@ -95,6 +95,9 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
             else { lastText = text; webview.html = this.buildHtml(webview, uri, folderPath, text); }
         })
             .on('setZoom', (z: number) => { this.context.globalState.update('markdownPreviewZoom', typeof z === 'number' ? z : 1); })
+            .on('setOutlineOpen', (v: boolean) => { this.context.globalState.update('markdownOutlineOpen', !!v); })
+            .on('setOutlineMode', (m: string) => { if (m === 'push' || m === 'overlay') this.context.globalState.update('markdownOutlineMode', m); })
+            .on('setOutlineWidth', (w: number) => { const n = Math.min(480, Math.max(180, Number(w) || 260)); this.context.globalState.update('markdownOutlineWidth', n); })
             .on('externalUpdate', () => scheduleRender())
             .on('fileChange', () => scheduleRender())
             .on('dispose', () => { if (renderTimer) clearTimeout(renderTimer); fileWatcher.dispose(); viewStateSub.dispose(); });
@@ -121,6 +124,12 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
         const themeId = MARKDOWN_THEMES.some(t => t.id === savedTheme) ? savedTheme : DEFAULT_THEME_ID;
         const themesJson = JSON.stringify(MARKDOWN_THEMES);
 
+        const outlineOpen = this.context.globalState.get<boolean>('markdownOutlineOpen', false);
+        const savedOutlineMode = this.context.globalState.get<string>('markdownOutlineMode', 'push');
+        const outlineMode = savedOutlineMode === 'overlay' ? 'overlay' : 'push';
+        const savedOutlineWidth = this.context.globalState.get<number>('markdownOutlineWidth', 260);
+        const outlineWidth = Math.min(480, Math.max(180, Number(savedOutlineWidth) || 260));
+
         const asset = (p: string) =>
             webview.asWebviewUri(vscode.Uri.file(`${this.extensionPath}/resource/markdown/${p}`)).toString();
 
@@ -135,7 +144,7 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
             : '';
 
         return `<!DOCTYPE html>
-<html data-theme="${themeId}">
+<html data-theme="${themeId}" data-outline-open="${outlineOpen ? '1' : '0'}" data-outline-mode="${outlineMode}" style="--md-outline-w:${outlineWidth}px">
 <head>
 <meta charset="utf-8">
 <base href="${baseUrl}/">
@@ -311,6 +320,7 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
   markActive(CURRENT);
 })();
 </script>
+<script src="${asset('outline.js')}"></script>
 ${mermaidScript}
 </body>
 </html>`;
