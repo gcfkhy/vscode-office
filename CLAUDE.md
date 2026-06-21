@@ -11,12 +11,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Package manager: **yarn is preferred** (per `.cursorrules`).
 
 - `npm run dev` — Full dev loop. Runs the Vite dev server (webview, port **5739**) **and** esbuild in watch mode for the extension host. Then press **F5** in VS Code ("Extension" launch config, which runs the `dev` task) to open the Extension Development Host.
-- `npm run build` — Production build: `rm -rf out`, `vite build --mode=production` (which also triggers a one-shot esbuild of the extension).
+- `npm run build` — Production build: cleans `out` via a cross-platform Node `fs.rmSync`, then `vite build --mode=production` (which also triggers a one-shot esbuild of the extension).
 - `npm run lint:fix` — ESLint with autofix over `src/**/*.ts`.
 - `npm run package` — Produce a `.vsix` (`vsce package --no-dependencies`).
 - `npm run publish` — Publish to VS Code Marketplace + Open VSX.
-
-> **Windows note:** the `build` script begins with `rm -rf out`, a Unix command. On Windows run it from a Unix-style shell (e.g. Git Bash) or it fails at the cleanup step.
 
 There is **no automated test runner** configured. The `test/` directory holds standalone Node performance scripts (e.g. `node test/xlsx_performance_test.js`), not a unit-test suite.
 
