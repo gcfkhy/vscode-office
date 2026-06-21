@@ -134,3 +134,76 @@ html, body { margin:0; padding:0; background: var(--md-bg); }
   z-index:100000; opacity:0; pointer-events:none; transition:opacity 0.18s; user-select:none;
 }
 #md-toast.show { opacity:0.95; }
+
+/* ===== 大纲导航 ===== */
+:root { --md-outline-w: 260px; }
+
+/* 左缘常驻把手:仅关闭时可见 */
+#md-outline-handle {
+  position: fixed; left:0; top:50%; transform:translateY(-50%);
+  width:18px; height:64px; display:flex; align-items:center; justify-content:center;
+  background: var(--md-ui-bg); border:1px solid var(--md-ui-border); border-left:none;
+  border-radius:0 8px 8px 0; color: var(--md-fg); font-size:13px; cursor:pointer;
+  z-index:99998; opacity:0.7; user-select:none;
+  -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+}
+#md-outline-handle:hover { opacity:1; }
+html[data-outline-open="1"] #md-outline-handle { display:none; }
+
+/* 面板:固定左侧,默认移出屏幕外 */
+#md-outline {
+  position: fixed; left:0; top:0; bottom:0; width: var(--md-outline-w);
+  display:flex; flex-direction:column; box-sizing:border-box;
+  background: var(--md-ui-bg); border-right:1px solid var(--md-ui-border); color: var(--md-fg);
+  z-index:99997; transform: translateX(-100%); transition: transform 0.2s ease;
+  -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+  box-shadow: 2px 0 16px rgba(0,0,0,0.18);
+}
+html[data-outline-open="1"] #md-outline { transform: translateX(0); }
+
+/* 推送模式:打开时把正文整体右推(padding 加在未缩放的 body 上,缩放下不错位)*/
+body { transition: padding-left 0.2s ease; }
+html[data-outline-open="1"][data-outline-mode="push"] body { padding-left: var(--md-outline-w); }
+
+/* 头部 */
+#md-outline-header {
+  display:flex; align-items:center; gap:6px; padding:8px 10px;
+  border-bottom:1px solid var(--md-ui-border); flex:0 0 auto;
+}
+#md-outline-title { font-size:13px; font-weight:600; flex:1 1 auto; }
+.md-outline-hbtn {
+  width:22px; height:22px; display:flex; align-items:center; justify-content:center;
+  border-radius:4px; cursor:pointer; font-size:13px; color: var(--md-muted);
+}
+.md-outline-hbtn:hover { background: var(--md-pre-bg); color: var(--md-fg); }
+
+/* 列表 */
+#md-outline-list { flex:1 1 auto; overflow:auto; padding:6px 4px 12px; }
+.md-outline-item.collapsed > .md-outline-children { display:none; }
+.md-outline-row { display:flex; align-items:flex-start; gap:2px; border-radius:4px; }
+.md-outline-row:hover { background: var(--md-pre-bg); }
+.md-outline-caret {
+  flex:0 0 auto; width:14px; text-align:center; font-size:10px; line-height:1.9;
+  color: var(--md-muted); cursor:pointer; user-select:none;
+}
+.md-outline-link {
+  flex:1 1 auto; padding:3px 4px; font-size:13px; line-height:1.4; color: var(--md-fg);
+  text-decoration:none; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.md-outline-link:hover { color: var(--md-link); }
+.md-outline-link.active { color: var(--md-link); font-weight:600; }
+
+/* 右边缘拖拽条 */
+#md-outline-grip { position:absolute; top:0; right:-3px; width:6px; height:100%; cursor:col-resize; z-index:1; }
+#md-outline-grip:hover { background: var(--md-link); opacity:0.4; }
+body.md-outline-resizing { cursor:col-resize; user-select:none; }
+body.md-outline-resizing #md-outline { transition:none; }
+
+/* 右下角 📑(在主题钮 192 左侧 -> 236)*/
+#md-outline-btn {
+  position: fixed; right:236px; bottom:16px; width:36px; height:36px; border-radius:50%;
+  background: var(--md-ui-bg); border:1px solid var(--md-ui-border); color: var(--md-fg);
+  display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer;
+  z-index:99999; opacity:0.8; user-select:none; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+}
+#md-outline-btn:hover { opacity:1; }
