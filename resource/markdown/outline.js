@@ -43,7 +43,7 @@
     const hs = Array.prototype.slice.call(mdBody.querySelectorAll('h1,h2,h3,h4,h5,h6'));
     const items = hs.map(function (h) {
       return { level: parseInt(h.tagName.charAt(1), 10), text: (h.textContent || '').trim(), id: h.id, el: h };
-    }).filter(function (it) { return it.text; });
+    }).filter(function (it) { return it.text && it.id; }); // 无 id 标题无法跳转/高亮,排除
     if (!items.length) return; // 无标题:不渲染面板/把手/按钮
 
     const tree = buildOutlineTree(items);
@@ -53,7 +53,7 @@
     const panel = document.createElement('div'); panel.id = 'md-outline';
     const header = document.createElement('div'); header.id = 'md-outline-header';
     const title = document.createElement('span'); title.id = 'md-outline-title'; title.textContent = '大纲';
-    const modeBtn = document.createElement('div'); modeBtn.className = 'md-outline-hbtn'; modeBtn.textContent = '⇆'; modeBtn.title = '切换 推送/浮层';
+    const modeBtn = document.createElement('div'); modeBtn.className = 'md-outline-hbtn'; modeBtn.textContent = '⇆'; // title 由 updateModeBtn 动态设置
     const closeBtn = document.createElement('div'); closeBtn.className = 'md-outline-hbtn'; closeBtn.textContent = '✕'; closeBtn.title = '关闭大纲';
     header.appendChild(title); header.appendChild(modeBtn); header.appendChild(closeBtn);
     const list = document.createElement('div'); list.id = 'md-outline-list';
@@ -105,8 +105,13 @@
       if (window.__mdPost) window.__mdPost('setOutlineOpen', open);
     }
     function toggleOpen() { setOpen(!isOpen()); }
+    function updateModeBtn() {
+      const m = docEl.getAttribute('data-outline-mode') === 'overlay' ? 'overlay' : 'push';
+      modeBtn.title = (m === 'push' ? '当前：推送模式' : '当前：浮层模式') + '，点击切换';
+    }
     function setMode(mode) {
       docEl.setAttribute('data-outline-mode', mode);
+      updateModeBtn();
       if (window.__mdPost) window.__mdPost('setOutlineMode', mode);
     }
     function toggleMode() { setMode(docEl.getAttribute('data-outline-mode') === 'overlay' ? 'push' : 'overlay'); }
@@ -115,6 +120,7 @@
     navBtn.addEventListener('click', toggleOpen);
     closeBtn.addEventListener('click', toggleOpen);
     modeBtn.addEventListener('click', toggleMode);
+    updateModeBtn();
 
     // 4) 拖拽调宽
     const MINW = 180, MAXW = 480;
@@ -128,7 +134,8 @@
     });
     window.addEventListener('mousemove', function (e) {
       if (!dragging) return;
-      const w = Math.min(MAXW, Math.max(MINW, e.clientX));
+      // 面板 fixed 于 left:0,clientX 即为期望宽度;减面板实际 left 以消除对 left==0 的隐式依赖。
+      const w = Math.min(MAXW, Math.max(MINW, e.clientX - panel.getBoundingClientRect().left));
       docEl.style.setProperty('--md-outline-w', w + 'px');
     });
     window.addEventListener('mouseup', function () {
@@ -139,6 +146,19 @@
 
     // 5) 滚动高亮
     let activeId = null;
+    // 自动展开活跃项的折叠祖先,避免滚动高亮落在被折叠隐藏的链接上(静默消失)。
+    function expandAncestors(link) {
+      let item = link.closest ? link.closest('.md-outline-item') : null;
+      item = item && item.parentElement ? item.parentElement.closest('.md-outline-item') : null;
+      while (item) {
+        if (item.classList.contains('collapsed')) {
+          item.classList.remove('collapsed');
+          const c = item.querySelector(':scope > .md-outline-row > .md-outline-caret');
+          if (c) c.textContent = '▾';
+        }
+        item = item.parentElement ? item.parentElement.closest('.md-outline-item') : null;
+      }
+    }
     function setActive(id) {
       if (id === activeId) return;
       if (activeId && linkById[activeId]) linkById[activeId].classList.remove('active');
@@ -146,6 +166,7 @@
       if (activeId && linkById[activeId]) {
         const a = linkById[activeId];
         a.classList.add('active');
+        expandAncestors(a);
         const r = a.getBoundingClientRect(), lr = list.getBoundingClientRect();
         if (r.top < lr.top || r.bottom > lr.bottom) a.scrollIntoView({ block: 'nearest' });
       }
