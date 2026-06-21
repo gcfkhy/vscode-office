@@ -150,6 +150,13 @@ git commit -m "Add outline tree builder with node test"
 
 ```js
   function __boot() {
+    if (typeof document === 'undefined') return;
+    // 脚本在 body 末尾加载,正常情况 DOM 已就绪;仍做就绪兜底,防止将来调整加载位置时取不到节点。
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', runOutline, { once: true });
+    else runOutline();
+  }
+
+  function runOutline() {
     const docEl = document.documentElement;
     const body = document.body;
     const mdBody = document.querySelector('.md-body');
