@@ -167,7 +167,9 @@ git commit -m "Add outline tree builder with node test"
     const items = hs.map(function (h) {
       return { level: parseInt(h.tagName.charAt(1), 10), text: (h.textContent || '').trim(), id: h.id, el: h };
     }).filter(function (it) { return it.text && it.id; }); // 无 id 标题无法跳转/高亮,排除
-    if (!items.length) return; // 无标题:不渲染面板/把手/按钮
+    // 无标题:清除可能由持久化状态残留的推送 padding(否则正文被推空且无 UI 可关),且不渲染 UI。
+    // 仅改 DOM 不回存 globalState,保留"下个有标题文档"的开关记忆。
+    if (!items.length) { docEl.setAttribute('data-outline-open', '0'); return; }
 
     const tree = buildOutlineTree(items);
     const linkById = {}; // id -> 大纲链接元素,供高亮
