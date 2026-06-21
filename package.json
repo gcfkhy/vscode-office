@@ -2,7 +2,7 @@
 	"name": "markdown-office-viewer-pro",
 	"displayName": "Markdown Office Viewer Pro",
 	"description": "View Office, PDF, image and archive files, with a themed Markdown preview and export.",
-	"version": "1.0.6",
+	"version": "1.0.7",
 	"publisher": "markdown-office-viewer",
 	"icon": "images/logo.png",
 	"engines": {
