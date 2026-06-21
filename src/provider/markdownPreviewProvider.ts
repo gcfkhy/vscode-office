@@ -40,7 +40,9 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
         let lastText: string | undefined;
         let renderTimer: ReturnType<typeof setTimeout> | undefined;
         const render = () => {
-            const text = this.readText(uri);
+            let text: string;
+            try { text = this.readText(uri); }
+            catch { return; }                       // 外部原子写入瞬间可能短暂读失败:保留旧内容,下次刷新再试
             if (text === lastText) return;          // 内容未变则跳过,避免无谓重载
             lastText = text;
             webview.html = this.buildHtml(webview, uri, folderPath, text);
@@ -57,6 +59,12 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
         const fileWatcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(folderPath, fileName));
         fileWatcher.onDidChange(() => scheduleRender());
         fileWatcher.onDidCreate(() => scheduleRender());
+
+        // 兜底:部分 IDE(如 VS Code 衍生版 Trae)的文件监听对"外部直接写磁盘"不可靠,
+        // 自动刷新可能不触发。预览重新可见时主动调度一次渲染(render 内部去重,内容未变不重载)。
+        const viewStateSub = panel.onDidChangeViewState(e => {
+            if (e.webviewPanel.visible) scheduleRender();
+        });
 
         handler.on('openLink', (link: string) => {
             const resReg = /https:\/\/file.*\.net/i;
@@ -80,20 +88,27 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
             const result = await new MarkdownService(this.context).exportPreview(uri, fmt, themeId);
             handler.emit('exportDone', result);
         }).on('refresh', () => {
-            const text = this.readText(uri);
+            let text: string;
+            try { text = this.readText(uri); }
+            catch { handler.emit('refreshNoop'); return; }  // 读取瞬时失败:温和提示而非抛出生硬错误弹窗
             if (text === lastText) { handler.emit('refreshNoop'); }      // 内容未变:不重载,提示即可
             else { lastText = text; webview.html = this.buildHtml(webview, uri, folderPath, text); }
         })
             .on('setZoom', (z: number) => { this.context.globalState.update('markdownPreviewZoom', typeof z === 'number' ? z : 1); })
             .on('externalUpdate', () => scheduleRender())
             .on('fileChange', () => scheduleRender())
-            .on('dispose', () => { if (renderTimer) clearTimeout(renderTimer); fileWatcher.dispose(); });
+            .on('dispose', () => { if (renderTimer) clearTimeout(renderTimer); fileWatcher.dispose(); viewStateSub.dispose(); });
     }
 
-    /** 优先读已打开的文本文档(反映原生编辑器未保存的改动),否则读磁盘。 */
+    /**
+     * 读取用于渲染的文本。
+     * 仅当原生编辑器存在"未保存改动"(isDirty)时才用内存内容(保留编辑联动);
+     * 其余一律读磁盘 —— 外部工具(AI/格式化器等)直接改磁盘后,IDE 里可能残留一个 clean
+     * 但滞后于磁盘、且未被及时 reload 的 TextDocument,信任它会让刷新读到陈旧内容。
+     */
     private readText(uri: vscode.Uri): string {
         const doc = vscode.workspace.textDocuments.find(d => d.uri.fsPath === uri.fsPath);
-        if (doc) return doc.getText();
+        if (doc && doc.isDirty) return doc.getText();
         return readFileSync(uri.fsPath, 'utf8');
     }
 
