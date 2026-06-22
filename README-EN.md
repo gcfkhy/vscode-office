@@ -32,6 +32,8 @@ Floating buttons in the bottom-right of the preview (right to left: refresh / zo
 - 📤 **Export** — export the preview **as you see it** to **PDF / HTML / long image (PNG)**, matching the current theme. PDF and PNG need a Chromium-based browser; set its path with `vscode-office.chromiumPath` if it isn't found automatically.
 - 🎨 **Theme** — switch between 18 light/dark palettes; your choice is remembered globally.
 
+Press `Ctrl/⌘ + F` to **find** within the preview: matches highlight as you type, `Enter` / `Shift + Enter` (or `F3` / `Shift + F3`) jump between results, `Aa` toggles case sensitivity, `Esc` closes.
+
 The preview **auto-refreshes** after the file is changed externally (based on precise file watching that covers external editors and atomic saves). You can also export PDF / HTML / DOCX from the editor title-bar button.
 
 ## Supported file types

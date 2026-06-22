@@ -207,3 +207,44 @@ body.md-outline-resizing #md-outline { transition:none; }
   z-index:99999; opacity:0.8; user-select:none; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
 }
 #md-outline-btn:hover { opacity:1; }
+
+/* ===== 查找 (Ctrl/⌘ + F) ===== */
+#md-find {
+  position: fixed; top:12px; right:16px; z-index:100001; display:none;
+  align-items:center; gap:4px; padding:5px 6px;
+  background: var(--md-ui-bg); border:1px solid var(--md-ui-border); border-radius:8px;
+  box-shadow:0 6px 24px rgba(0,0,0,0.35); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+  font-family:'MiSans','Segoe UI',sans-serif;
+}
+#md-find.open { display:flex; }
+#md-find-input {
+  width:180px; box-sizing:border-box; border:1px solid var(--md-ui-border); border-radius:5px; outline:none;
+  background: var(--md-pre-bg); color: var(--md-fg); font-size:13px; padding:4px 8px; font-family:inherit;
+}
+#md-find-input:focus { border-color: var(--md-link); }
+#md-find-count {
+  min-width:54px; text-align:center; font-size:12px; color: var(--md-muted);
+  user-select:none; white-space:nowrap;
+}
+#md-find-count.none { color: var(--md-code-fg); }
+.md-find-btn {
+  width:26px; height:26px; display:flex; align-items:center; justify-content:center;
+  border-radius:5px; cursor:pointer; font-size:14px; color: var(--md-fg); user-select:none; flex:0 0 auto;
+}
+.md-find-btn:hover { background: var(--md-pre-bg); }
+.md-find-btn.active { background: var(--md-pre-bg); color: var(--md-link); font-weight:600; }
+.md-find-btn.disabled { opacity:0.35; pointer-events:none; }
+#md-find-case { font-size:12px; font-weight:600; }
+
+/* 现代 Chromium:CSS Custom Highlight API 着色,不改 DOM。
+   底色用较高不透明度的黄并强制深色文字 —— 半透明黄叠在暗色正文上会让浅色 --md-fg 文字对比不足,
+   固定 #1a1a1a 文字在亮/暗主题下都清晰(等同荧光笔)。当前项用更醒目的橙。 */
+::highlight(md-find) { background: var(--md-find-bg, rgba(255,210,0,0.55)); color:#1a1a1a; }
+::highlight(md-find-current) { background: var(--md-find-current-bg, rgba(255,145,0,0.9)); color:#1a1a1a; }
+
+/* 旧版降级:覆盖"当前匹配"的浮层方块(同样不改 DOM)。fixed 用视口坐标,避开 .md-body 的 zoom;
+   z-index 99998 高于大纲面板(99997)以免被遮,低于右下角按钮(99999)。*/
+#md-find-overlay {
+  position:fixed; display:none; z-index:99998; pointer-events:none;
+  background: var(--md-find-current-bg, rgba(255,145,0,0.4)); border-radius:2px;
+}

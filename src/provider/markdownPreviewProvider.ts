@@ -321,6 +321,7 @@ export class MarkdownPreviewProvider implements vscode.CustomReadonlyEditorProvi
 })();
 </script>
 <script src="${asset('outline.js')}"></script>
+<script src="${asset('find.js')}"></script>
 ${mermaidScript}
 </body>
 </html>`;

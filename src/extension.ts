@@ -17,6 +17,10 @@ export function activate(context: vscode.ExtensionContext) {
 	activateYaml(context);
 	activateGitHistory(context);
 	const viewOption = { webviewOptions: { retainContextWhenHidden: true, enableFindWidget: true } };
+	// Markdown 预览自带 webview 内查找(resource/markdown/find.js,Ctrl/⌘+F)。这里必须关掉原生查找组件:
+	// 否则 enableFindWidget 为 true 时 VS Code 会在宿主侧抢走 Ctrl+F 弹出自己的查找框,按键不再下发到
+	// iframe,自建查找条永远收不到快捷键。两者只能留一个,见 find.js 顶部说明。
+	const markdownViewOption = { webviewOptions: { retainContextWhenHidden: true, enableFindWidget: false } };
 	FileUtil.init(context)
 	ReactApp.init(context)
 	const markdownService = new MarkdownService(context);
@@ -28,8 +32,8 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand('office.html.preview', uri => HtmlService.previewHtml(uri, context)),
 		vscode.commands.registerCommand('office.markdown.export', (uri) => { markdownService.exportPick(uri) }),
 		vscode.workspace.registerTextDocumentContentProvider('decompile_java', new JavaDecompilerProvider()),
-		vscode.window.registerCustomEditorProvider("cweijan.markdownViewer", markdownPreviewProvider, viewOption),
-		vscode.window.registerCustomEditorProvider("cweijan.markdownPreview", markdownPreviewProvider, viewOption),
+		vscode.window.registerCustomEditorProvider("cweijan.markdownViewer", markdownPreviewProvider, markdownViewOption),
+		vscode.window.registerCustomEditorProvider("cweijan.markdownPreview", markdownPreviewProvider, markdownViewOption),
 		...viewerInstance.bindCustomEditors(viewOption)
 	);
 }
