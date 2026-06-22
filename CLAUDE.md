@@ -2,63 +2,76 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## What this is
+## 这是什么
 
-`vscode-office` (Marketplace name "Markdown Office Viewer Pro", id `markdown-office-viewer.markdown-office-viewer-pro`) is a VS Code extension that previews and edits many file types in custom editors: Excel/Word/PowerPoint, PDF/EPUB, images (incl. HEIC/TIFF/PSD/ICNS/SVG), fonts, archives (zip/rar/7z/tar), Java `.class` (decompiler), Markdown (read-only preview, Catppuccin-themed, rendered via markdown-it), HTML preview, an HTTP/REST client, YAML navigation, and a Git History viewer.
+`vscode-office`(Marketplace 名称 "Markdown Office Viewer Pro",id `markdown-office-viewer.markdown-office-viewer-pro`)是一个 VS Code 扩展,用自定义编辑器预览/编辑大量文件类型:Excel/Word/PowerPoint、PDF/EPUB、图片(含 HEIC/TIFF/PSD/ICNS/SVG)、字体、压缩包(zip/rar/7z/tar)、Java `.class`(反编译)、Markdown(只读预览,Catppuccin 风格,经 markdown-it 渲染)、HTML 预览、HTTP/REST 客户端、YAML 导航,以及 Git 历史查看器。
 
-## Commands
+本项目 fork 自上游 `cweijan/vscode-office`,差异主要集中在 **Markdown 体验**(上游用 Vditor 所见即所得编辑器,本项目改为 markdown-it 只读预览 + 主题化导出)与整体定位上;其余预览能力基本继承自上游。
 
-Package manager: **yarn is preferred** (per `.cursorrules`).
+## 命令
 
-- `npm run dev` — Full dev loop. Runs the Vite dev server (webview, port **5739**) **and** esbuild in watch mode for the extension host. Then press **F5** in VS Code ("Extension" launch config, which runs the `dev` task) to open the Extension Development Host.
-- `npm run build` — Production build: cleans `out` via a cross-platform Node `fs.rmSync`, then `vite build --mode=production` (which also triggers a one-shot esbuild of the extension).
-- `npm run lint:fix` — ESLint with autofix over `src/**/*.ts`.
-- `npm run package` — Produce a `.vsix` (`vsce package --no-dependencies`).
-- `npm run publish` — Publish to VS Code Marketplace + Open VSX.
+包管理器:**优先用 yarn**(见 `.cursorrules`)。
 
-There is **no automated test runner** configured. The `test/` directory holds standalone Node performance scripts (e.g. `node test/xlsx_performance_test.js`), not a unit-test suite.
+- `npm run dev` —— 完整开发循环。同时启动 Vite 开发服务器(webview,端口 **5739**)**和** esbuild 监视模式(扩展宿主)。然后在 VS Code 里按 **F5**("Extension" 启动项,会触发 `dev` 任务)打开扩展开发宿主窗口。
+- `npm run build` —— 生产构建:先用跨平台的 Node `fs.rmSync` 清空 `out`,再 `vite build --mode=production`(同时一次性触发扩展的 esbuild)。
+- `npm run lint:fix` —— 对 `src/**/*.ts` 跑 ESLint 自动修复。
+- `npm run package` —— 产出 `.vsix`(`vsce package --no-dependencies`)。
+- `npm run publish` —— 发布到 VS Code Marketplace + Open VSX。
 
-Commit-message conventions (from `.cursorrules`): English, ≤ 70 characters.
+**没有配置自动化测试运行器。** `test/` 目录是独立的 Node 脚本,直接 `node test/<name>.js` 运行单个即可。纯函数有断言测试(如 `node test/find_index_test.js`、`test/outline_tree_test.js`、`test/markdown_render_test.js`、`test/markdown_themes_test.js`),另有性能脚本(如 `test/xlsx_performance_test.js`)。给 `resource/markdown/*.js` 这类带纯函数的资源新增逻辑时,优先按 UMD 方式导出纯函数并补一个对应的 `test/*.js` 断言脚本(参考 `outline.js` + `outline_tree_test.js`)。
 
-## Architecture: two separate bundles
+提交信息约定(见 `.cursorrules`):**英文,≤ 70 字符**。
 
-The single biggest thing to understand is that the code splits into **two independently-bundled worlds** with different module systems, build tools, and import conventions:
+## 架构:两套独立打包
 
-1. **Extension host (Node.js)** — everything in `src/` *except* `src/react`. Bundled by **esbuild** via `build.ts` into `out/extension.js` (CJS). Entry: `src/extension.ts`. Uses the **`@/*` path alias → `src/*`** (resolved from `tsconfig.json` paths; `tsconfig.json` *excludes* `src/react`). Heavy native/Node deps listed in `build.ts` `dependencies[]` are kept external and pre-bundled separately into `out/node_modules` (so puppeteer, pdf-lib, 7z-wasm, etc. load at runtime).
+理解本仓库最关键的一点:代码分成**两个相互独立打包的世界**,模块系统、构建工具、导入约定都不同。
 
-2. **Webview UI (browser, React 19)** — `src/react`. Bundled by **Vite** (`vite.config.ts`) into `out/webview`. Entry: `src/react/main.tsx`. Uses **relative imports only** (no `@/` alias here). Uses Ant Design + lazy-loaded per-viewer components.
+1. **扩展宿主(Node.js)** —— `src/` 下除 `src/react` 外的全部。由 **esbuild** 经 `build.ts` 打包成 `out/extension.js`(CJS)。入口 `src/extension.ts`。使用 **`@/*` 路径别名 → `src/*`**(由 `tsconfig.json` paths 解析;`tsconfig.json` **排除** `src/react`)。`build.ts` 的 `dependencies[]` 里列出的重型原生/Node 依赖保持 external,并被单独预打包到 `out/node_modules`(让 puppeteer、pdf-lib、7z-wasm 等运行时再加载)。
 
-`vite.config.ts` ties them together: when invoked with a `--mode` flag it `require('./build')`, so a single `vite`/`vite build` command also drives the esbuild extension build (watch in dev, one-shot in prod).
+2. **Webview UI(浏览器,React 19)** —— `src/react`。由 **Vite**(`vite.config.ts`)打包到 `out/webview`。入口 `src/react/main.tsx`。**只用相对导入**(这里没有 `@/` 别名)。用 Ant Design + 按视图懒加载的组件。
 
-Vditor has been removed. Markdown now reuses the host-side markdown-it pipeline (shared by the export/PDF service and the preview provider) — there is no longer a separate third bundle.
+`vite.config.ts` 把两者串起来:当带 `--mode` 标志调用时它 `require('./build')`,所以单条 `vite`/`vite build` 命令也会驱动 esbuild 扩展构建(dev 下监视,生产下一次性)。
 
-## How a custom editor renders
+Vditor 已移除。Markdown 现在复用宿主侧的 markdown-it 流水线(与导出/PDF 服务、预览 provider 共享),不再有第三个打包产物。
 
-Two provider patterns register against the `customEditors` declared in `package.json`:
+## 自定义编辑器如何渲染
 
-- `src/provider/officeViewerProvider.ts` (`CustomReadonlyEditorProvider`) handles **all read-only viewers** — it registers itself for *all 8* read-only `viewType`s (see `bindCustomEditors`). `resolveCustomEditor` inspects the file suffix, picks a string `route` (e.g. `excel`, `word`, `ppt`, `zip`, `image`, `svg`, `epub`, `psd`, `xmind`, `font`), wires up data handlers, then calls `ReactApp.view(webview, { route })`. PDF and HTML are special-cased (they set `webview.html` directly from `resource/pdf/viewer.html` / the file itself rather than the React app). Java `.class` is also special: `handleClass` shells out to an **external `java` runtime** (must be on `PATH`) running the bundled `resource/java-decompiler.jar` (Fernflower), then opens the result through the `decompile_java` `TextDocumentContentProvider` (registered in `extension.ts`) — not the React app.
-- `src/provider/markdownPreviewProvider.ts` (`CustomReadonlyEditorProvider`) is the **Markdown preview** provider. It renders a read-only preview by calling the shared host-side renderer `src/service/markdown/render.js` (markdown-it) and sets `webview.html` directly — the same special-case pattern used by PDF and HTML. Styles come from `resource/markdown/` (palette-driven `themes.css` + KaTeX under `katex/` + `mermaid.min.js`). The preview has a bottom-right UI — 🎨 theme switcher (18 palettes via `markdownThemes.ts`, persisted in `globalState`), 📤 themed export (PDF/HTML/long-PNG via `previewExport.js` + puppeteer), 🔄 manual refresh, ➕/➖ + Ctrl-wheel zoom (persisted) — and auto-refreshes on external change via its own `RelativePattern` watcher (the shared `Handler.fileChange` `fsPath`-glob watcher is unreliable for files outside the workspace / on Windows).
+针对 `package.json` 里声明的 `customEditors`,有两种 provider 模式:
 
-`src/common/reactApp.ts` (`ReactApp.view`) is the bridge to the React UI: it loads `out/webview/index.html` (or proxies `http://127.0.0.1:5739` in dev), rewrites the `<base href>` to a webview URI, and injects a `{{configs}}` JSON blob (route, icon/sponsor base URLs, language, and the `vscode-office` config). `src/react/main.tsx` reads `configs.route` and switches to the matching lazy-loaded view component under `src/react/view/<name>/`.
+- `src/provider/officeViewerProvider.ts`(`CustomReadonlyEditorProvider`)处理**所有只读查看器** —— 它给全部 8 个只读 `viewType` 注册自身(见 `bindCustomEditors`)。`resolveCustomEditor` 检查文件后缀,选一个字符串 `route`(如 `excel`、`word`、`ppt`、`zip`、`image`、`svg`、`epub`、`psd`、`xmind`、`font`),接上数据处理器,再调 `ReactApp.view(webview, { route })`。PDF 与 HTML 是特例(直接从 `resource/pdf/viewer.html` / 文件本身设置 `webview.html`,而非走 React 应用)。Java `.class` 也特殊:`handleClass` 调用**外部 `java` 运行时**(须在 `PATH` 上)跑内置 `resource/java-decompiler.jar`(Fernflower),再经 `decompile_java` `TextDocumentContentProvider`(在 `extension.ts` 注册)打开结果 —— 不走 React 应用。
 
-## Extension ⇄ webview messaging
+- `src/provider/markdownPreviewProvider.ts`(`CustomReadonlyEditorProvider`)是 **Markdown 预览** provider。它调用共享的宿主侧渲染器 `src/service/markdown/render.js`(markdown-it)渲染出只读 HTML,并**直接设置 `webview.html`** —— 与 PDF/HTML 同样的特例模式。详见下一节。
 
-All communication uses a small event-bus abstraction on both sides:
+`src/common/reactApp.ts`(`ReactApp.view`)是通往 React UI 的桥:加载 `out/webview/index.html`(dev 下代理 `http://127.0.0.1:5739`),把 `<base href>` 改写为 webview URI,并注入一段 `{{configs}}` JSON(route、图标/赞助 base URL、语言,以及 `vscode-office` 配置)。`src/react/main.tsx` 读 `configs.route` 切到 `src/react/view/<name>/` 下对应的懒加载视图组件。
 
-- Host side: `src/common/handler.ts` — `Handler.bind(panel, uri)` wraps `webview.postMessage` / `onDidReceiveMessage` as `.on(event, cb)` / `.emit(event, content)`, and also auto-wires file-system watching (`fileChange`, `externalUpdate`, `dispose`).
-- Webview side: `src/react/util/vscode.ts` exports a matching `handler` with the same `.on`/`.emit` API over `window.postMessage` / `acquireVsCodeApi`.
+## 扩展 ⇄ webview 通信
 
-So a viewer is implemented as: provider calls a `handle<Type>(uri, handler)` function (see `src/provider/handlers/` and `src/provider/compress/`) that responds to events like `init` with file data; the React view emits `init` on mount and renders what comes back.
+两侧都用一个小型事件总线抽象:
 
-## Major feature areas (mostly self-contained)
+- 宿主侧:`src/common/handler.ts` —— `Handler.bind(panel, uri)` 把 `webview.postMessage` / `onDidReceiveMessage` 封装为 `.on(event, cb)` / `.emit(event, content)`,并自动接上文件系统监听(`fileChange`、`externalUpdate`、`dispose`)。
+- Webview 侧:`src/react/util/vscode.ts` 导出同样 `.on`/`.emit` API 的 `handler`,基于 `window.postMessage` / `acquireVsCodeApi`。
 
-- `src/provider/http/` — HTTP/REST client, integrated and adapted from vscode-restclient. Activated via `activateHttp`; registers language providers, code lenses, and request execution for `.http`/`.rest`.
-- `src/gitHistory/` — Git History viewer, a full vertical slice: `service/` (git executor, repo discovery, commit/action services), `provider/` (webview panel + message router), with the React UI in `src/react/view/gitHistory/`. Activated via `activateGitHistory`; degrades gracefully if git isn't found.
-- `src/provider/yaml/` — YAML outline + anchor/alias Go-to-Definition. Activated via `activateYaml`.
-- `src/service/` — host-side services: `markdownService.ts` (export Markdown → PDF via puppeteer-core/Chromium, DOCX, HTML), `telemetryService.ts` (`@vscode/extension-telemetry`; gated by `vscode-office.enableTelemetry` + global telemetry), compress/archive helpers, icon resolution.
+于是一个查看器的实现是:provider 调一个 `handle<Type>(uri, handler)` 函数(见 `src/provider/handlers/` 与 `src/provider/compress/`)响应 `init` 等事件返回文件数据;React 视图挂载时 `emit('init')` 并渲染收到的内容。
 
-`src/extension.ts` `activate()` is the wiring map: it initializes telemetry, calls the `activate*` feature entrypoints, and registers the office viewer + markdown preview providers and the `office.*` commands.
+## Markdown 预览的 webview 资源(易踩坑)
 
-## Settings & i18n
+Markdown 预览**不走 React/Vite**,而是宿主侧直接拼 HTML(`buildHtml`)。其前端资源放在 `resource/markdown/`(`themes.css` 调色板 + `preview.css` + `outline.js` 大纲 + `find.js` 查找 + `katex/` + `mermaid.min.js`),通过 `webview.asWebviewUri(extensionPath/resource/markdown/...)` **从扩展目录直接加载**:
 
-User settings live under the `vscode-office.*` namespace (defined in `package.json` `contributes.configuration`); read them via `Global.getConfig` / `vscode.workspace.getConfiguration('vscode-office')`. The Markdown preview and several viewers are localized; `vscode-office.editorLanguage` and `vscode.env.language` drive locale.
+- 它们**既不被 Vite 打包、也不被 build.ts 复制到 `out`**(`build.ts` 的 `copy()` 只处理 `template/`、unrar.wasm、7zz.wasm)。因此改这些文件**无需重新构建扩展宿主**,在开发宿主里重载 webview 即可生效。
+- 预览右下角有一组悬浮 UI:🎨 主题切换(18 套调色板,见 `markdownThemes.ts`,存 `globalState`)、📤 主题化导出(PDF/HTML/长图 PNG,经 `previewExport.js` + puppeteer)、🔄 手动刷新、➕/➖ 与 Ctrl-滚轮缩放(持久化);左缘有 📑 大纲面板(`outline.js`);**Ctrl/⌘+F 查找条**(`find.js`)。外部改动时经各自的 `RelativePattern` watcher 自动刷新(共享的 `Handler.fileChange` 用 `fsPath`-glob,对工作区外/Windows 路径不可靠)。
+- 每次渲染都整体重设 `webview.html`,因此 webview 内的瞬时状态(查找词、当前匹配等)会随刷新重置 —— 这是只读预览可接受的取舍,未做跨重建持久化(滚动位置/缩放/主题则经 `globalState` 持久化并在 `buildHtml` 注入)。
+
+**关于查找(`enableFindWidget`)的关键事实**:自定义编辑器**可以**经 `registerCustomEditorProvider` 的 `webviewOptions.enableFindWidget` 启用 VS Code 原生查找框(常见误解是不行)。`extension.ts` 里共享的 `viewOption` 把它设为 `true`(office 查看器用),但 Markdown 预览**特意用单独的 `markdownViewOption` 把 `enableFindWidget` 设为 `false`**,这样 Ctrl+F 不会被宿主侧原生查找抢走,而是下发到 iframe 由 `find.js` 处理。原生组件与 `find.js` 只能留一个。`find.js` 的高亮优先用 CSS Custom Highlight API(`engines.vscode` 低至 `^1.64` / Chromium 91,低于该 API 的 105 时降级为浮层方块)。
+
+## 主要功能区(大多自成一体)
+
+- `src/provider/http/` —— HTTP/REST 客户端,改编自 vscode-restclient。经 `activateHttp` 激活;为 `.http`/`.rest` 注册语言能力、code lens 与请求执行。
+- `src/gitHistory/` —— Git 历史查看器,完整纵切:`service/`(git 执行器、仓库发现、commit/action 服务)、`provider/`(webview 面板 + 消息路由),React UI 在 `src/react/view/gitHistory/`。经 `activateGitHistory` 激活;找不到 git 时优雅降级。
+- `src/provider/yaml/` —— YAML 大纲 + 锚点/别名 跳转定义。经 `activateYaml` 激活。
+- `src/service/` —— 宿主侧服务:`markdownService.ts`(导出 Markdown → PDF via puppeteer-core/Chromium、DOCX、HTML)、`telemetryService.ts`(`@vscode/extension-telemetry`,受 `vscode-office.enableTelemetry` + 全局遥测开关控制)、压缩/归档辅助、图标解析。
+
+`src/extension.ts` 的 `activate()` 是接线总图:初始化遥测,调用各 `activate*` 功能入口,注册 office 查看器 + Markdown 预览 provider 以及 `office.*` 命令。
+
+## 设置与 i18n
+
+用户设置都在 `vscode-office.*` 命名空间下(定义于 `package.json` 的 `contributes.configuration`);经 `Global.getConfig` / `vscode.workspace.getConfiguration('vscode-office')` 读取。Markdown 预览与若干查看器已本地化;`vscode-office.editorLanguage` 与 `vscode.env.language` 决定语言环境。
