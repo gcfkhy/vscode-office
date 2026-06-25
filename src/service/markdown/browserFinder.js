@@ -86,7 +86,7 @@ async function prefetchExportBrowser(options) {
  * 真实路径(未注入依赖)做并发去重,保证同一时刻只下一份。
  */
 async function locateOrDownloadShell(options) {
-  const { cacheDir, withProgress } = options
+  const { cacheDir, withProgress, preferMirror, onError } = options
   const fsm = options._fs || fs
   const browsers = options._browsers || require("@puppeteer/browsers")
 
@@ -101,12 +101,11 @@ async function locateOrDownloadShell(options) {
     return exe
   }
 
-  // 未缓存 → 下载(首次,约 80MB,一次性)。真实路径并发去重。
   const injected = !!options._browsers
   if (!injected && inflightDownload) {
     return inflightDownload
   }
-  const work = doDownloadShell({ browsers, browser, buildId, cacheDir, withProgress, exe, fsm })
+  const work = doDownloadShell({ browsers, browser, buildId, cacheDir, withProgress, exe, fsm, preferMirror, onError })
   if (!injected) {
     inflightDownload = work
     const clear = () => { if (inflightDownload === work) inflightDownload = null }
@@ -115,17 +114,31 @@ async function locateOrDownloadShell(options) {
   return work
 }
 
-async function doDownloadShell({ browsers, browser, buildId, cacheDir, withProgress, exe, fsm }) {
+async function doDownloadShell({ browsers, browser, buildId, cacheDir, withProgress, exe, fsm, preferMirror, onError }) {
   fsm.mkdirSync(cacheDir, { recursive: true })
-  const doInstall = (report) => browsers.install({
-    browser, buildId, cacheDir,
-    downloadProgressCallback: (downloaded, total) => {
-      if (report && total) report(Math.floor((downloaded / total) * 100) + "%")
-    },
-  })
-  const installed = withProgress ? await withProgress(doInstall) : await doInstall(null)
-  const out = (installed && installed.executablePath) || exe
-  return fsm.existsSync(out) ? out : undefined
+  const baseUrls = resolveDownloadBaseUrls(preferMirror)
+  // 逐源尝试:某源失败 → 记日志 → 试下一个;全失败才抛出(交上层落系统兜底 / 预热返回 undefined)。
+  const attempt = async (report) => {
+    let lastErr
+    for (const baseUrl of baseUrls) {
+      try {
+        const installed = await browsers.install({
+          browser, buildId, cacheDir, baseUrl,
+          downloadProgressCallback: (downloaded, total) => {
+            if (report && total) report(Math.floor((downloaded / total) * 100) + "%")
+          },
+        })
+        const out = (installed && installed.executablePath) || exe
+        if (fsm.existsSync(out)) return out
+        lastErr = new Error("download produced no executable")
+      } catch (e) {
+        lastErr = e
+        if (onError) onError(e)
+      }
+    }
+    throw lastErr || new Error("all download sources failed")
+  }
+  return withProgress ? await withProgress(attempt) : await attempt(null)
 }
 
 module.exports = { resolveExportBrowser, prefetchExportBrowser, resolveDownloadBaseUrls, CHROME_HEADLESS_SHELL_BUILD, NPM_MIRROR_BASE_URL }

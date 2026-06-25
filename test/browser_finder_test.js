@@ -123,6 +123,32 @@ async function run() {
     assert.strictEqual(out, SHELL_EXE, "prefetch cached → shell")
   }
 
+  // ⑩ 回退:首源(镜像)失败 → 自动切官方源成功,且按序各试一次
+  {
+    const present = new Set() // 安装前不存在;成功安装后存在
+    const calls = { install: 0, baseUrls: [] }
+    const browsers = {
+      Browser: { CHROMEHEADLESSSHELL: "chrome-headless-shell" },
+      detectBrowserPlatform: () => "win64",
+      computeExecutablePath: () => SHELL_EXE,
+      install: async (opts) => {
+        calls.install++
+        calls.baseUrls.push(opts.baseUrl)
+        if (opts.baseUrl === NPM_MIRROR_BASE_URL) throw new Error("mirror down")
+        present.add(SHELL_EXE)
+        return { executablePath: SHELL_EXE }
+      },
+    }
+    const fs = { existsSync: (p) => present.has(p), mkdirSync: () => {} }
+    const out = await resolveExportBrowser({
+      cacheDir: "/cache", preferMirror: true,
+      systemFallback: () => "SYSTEM", onError: () => {}, _browsers: browsers, _fs: fs,
+    })
+    assert.strictEqual(out, SHELL_EXE, "mirror fail should fall back to official and succeed")
+    assert.deepStrictEqual(calls.baseUrls, [NPM_MIRROR_BASE_URL, undefined],
+      "should try mirror first, then official")
+  }
+
   // ⑨ 纯函数:下载源顺序。preferMirror=true → [镜像, 官方];false → [官方, 镜像]
   {
     assert.deepStrictEqual(
