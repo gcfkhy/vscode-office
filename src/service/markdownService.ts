@@ -167,6 +167,13 @@ export class MarkdownService {
         }
     }
 
+    /** 简体中文环境(VS Code 界面语言或编辑器语言为简中)优先走国内镜像下载导出引擎。 */
+    private preferMirror(): boolean {
+        const lang = (vscode.env.language || "").toLowerCase();
+        const editorLang = Global.getConfig<string>("editorLanguage");
+        return lang === "zh-cn" || editorLang === "zh_CN";
+    }
+
     /**
      * 解析导出用浏览器:优先专用 chrome-headless-shell(独立无头二进制,
      * 不与系统 Edge/Chrome 抢进程单例,Windows 上 Edge 开着也能导出),
@@ -177,6 +184,7 @@ export class MarkdownService {
         const cacheDir = join(this.context.globalStorageUri.fsPath, 'browsers');
         return resolveExportBrowser({
             cacheDir,
+            preferMirror: this.preferMirror(),
             configuredPath: Global.getConfig<string>('chromiumPath') || undefined,
             systemFallback: () => this.getChromiumPath(),
             onError: (e: any) => Output.log(e && e.stack ? e.stack : e),
@@ -203,6 +211,7 @@ export class MarkdownService {
         try {
             await prefetchExportBrowser({
                 cacheDir,
+                preferMirror: this.preferMirror(),
                 configuredPath: Global.getConfig<string>('chromiumPath') || undefined,
                 onError: (e: any) => Output.log(e && e.stack ? e.stack : e),
                 withProgress: (task: (report: (pct: string) => void) => Promise<any>) => {
