@@ -96,28 +96,7 @@ async function run() {
     assert.strictEqual(browsers.calls.install, 0, "no install on unsupported platform")
   }
 
-  // ⑥ useSystemBrowser:跳过下载,直接系统兜底(即使 shell 未缓存)
-  {
-    const browsers = fakeBrowsers()
-    const out = await resolveExportBrowser({
-      cacheDir: "/cache", useSystemBrowser: true, systemFallback: () => "SYSTEM",
-      _browsers: browsers, _fs: fakeFs([]),
-    })
-    assert.strictEqual(out, "SYSTEM", "useSystemBrowser should skip download → system")
-    assert.strictEqual(browsers.calls.install, 0, "useSystemBrowser → no install")
-  }
-
-  // ⑦ useSystemBrowser 为真,但 configuredPath 存在 → ① 仍优先
-  {
-    const browsers = fakeBrowsers()
-    const out = await resolveExportBrowser({
-      cacheDir: "/cache", useSystemBrowser: true, configuredPath: "/my/chrome.exe",
-      systemFallback: () => "SYSTEM", _browsers: browsers, _fs: fakeFs(["/my/chrome.exe"]),
-    })
-    assert.strictEqual(out, "/my/chrome.exe", "configured path wins over useSystemBrowser")
-  }
-
-  // ⑧ prefetch:平台不支持 → undefined(不回退系统)
+  // ⑥ prefetch:平台不支持 → undefined(不回退系统)
   {
     const browsers = fakeBrowsers({ platform: null })
     const out = await prefetchExportBrowser({
@@ -126,7 +105,7 @@ async function run() {
     assert.strictEqual(out, undefined, "prefetch unsupported platform → undefined")
   }
 
-  // ⑨ prefetch:下载失败 → undefined(不回退系统)
+  // ⑦ prefetch:下载失败 → undefined(不回退系统)
   {
     const browsers = fakeBrowsers({ installThrows: true })
     const out = await prefetchExportBrowser({
@@ -135,7 +114,7 @@ async function run() {
     assert.strictEqual(out, undefined, "prefetch download failure → undefined")
   }
 
-  // ⑩ prefetch:已缓存 → 返回 shell
+  // ⑧ prefetch:已缓存 → 返回 shell
   {
     const browsers = fakeBrowsers()
     const out = await prefetchExportBrowser({

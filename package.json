@@ -2,7 +2,7 @@
 	"name": "markdown-office-viewer-pro",
 	"displayName": "Markdown Office Viewer Pro",
 	"description": "View Office, PDF, image and archive files, with a themed Markdown preview and export.",
-	"version": "1.0.8",
+	"version": "1.0.9",
 	"publisher": "markdown-office-viewer",
 	"icon": "images/logo.png",
 	"engines": {
@@ -830,6 +830,7 @@
 		"diff-match-patch": "1.0.5",
 		"@lezer/highlight": "^1.2.3",
 		"@mind-elixir/import-xmind": "^1.0.8",
+		"@puppeteer/browsers": "^3.0.4",
 		"@vscode/codicons": "^0.0.45",
 		"@vscode/extension-telemetry": "^1.5.2",
 		"@zip.js/zip.js": "^2.8.26",

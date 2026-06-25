@@ -24,6 +24,7 @@ export function activate(context: vscode.ExtensionContext) {
 	FileUtil.init(context)
 	ReactApp.init(context)
 	const markdownService = new MarkdownService(context);
+	markdownService.prewarmBrowser(); // 后台预取 chrome-headless-shell,失败自吞
 	const viewerInstance = new OfficeViewerProvider(context);
 	const markdownPreviewProvider = new MarkdownPreviewProvider(context)
 	context.subscriptions.push(

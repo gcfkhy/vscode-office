@@ -4,7 +4,7 @@ const { existsSync } = require("fs")
 const { copy } = require("esbuild-plugin-copy")
 const isProd = process.argv.indexOf('--mode=production') >= 0;
 
-const dependencies = ['vscode-html-to-docx', 'highlight.js', 'pdf-lib', 'cheerio', 'katex', 'mustache', 'puppeteer-core', '7z-wasm']
+const dependencies = ['vscode-html-to-docx', 'highlight.js', 'pdf-lib', 'cheerio', 'katex', 'mustache', 'puppeteer-core', '@puppeteer/browsers', '7z-wasm']
 
 function main() {
     build({

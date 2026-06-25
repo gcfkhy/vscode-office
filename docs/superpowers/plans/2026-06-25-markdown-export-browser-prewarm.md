@@ -1,8 +1,15 @@
-# Markdown 导出引擎预热 + 「使用系统浏览器」开关 Implementation Plan
+# Markdown 导出引擎预热(系统浏览器仅作自动兜底) Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 启动后后台预下载 `chrome-headless-shell` 消除首次导出等待,并加 `exportUseSystemBrowser` 开关让用户退回系统浏览器。
+> **修订(2026-06-25,执行后)**:原计划含一个 `vscode-office.exportUseSystemBrowser` 用户开关,
+> 评审后**砍掉**(系统浏览器只能在彻底关闭时可靠,不宜做成用户主动选项 —— 详见 spec 顶部修订)。
+> 最终实现:**无任何用户设置**;系统浏览器仅自动兜底;预热**始终运行**。因此下文 Task 1/2 中
+> 一切 `useSystemBrowser` 相关的选项、短路分支与测试用例(⑥⑦)**均不在最终代码**,
+> `prewarmBrowser` 也**没有**「开关跳过」检查。`noSystemFallback` / `prefetchExportBrowser` /
+> 并发去重 / 状态栏预热 / 版本 1.0.9 等其余部分不变。
+
+**Goal:** 启动后后台预下载 `chrome-headless-shell` 消除首次导出等待;系统浏览器仅作自动兜底。
 
 **Architecture:** `browserFinder.js`(宿主侧纯逻辑,可 node 单测)作为「解析大脑」:三级解析 + 新增系统浏览器短路 + 预热入口 + 并发去重。`markdownService.ts` 注入开关、新增 `prewarmBrowser()`(状态栏 UI)。`extension.ts` 激活时 fire-and-forget 触发预热。
 

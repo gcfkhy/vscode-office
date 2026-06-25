@@ -21,14 +21,12 @@ let inflightDownload = null
  *
  * 解析顺序:
  *   ① 用户在设置里显式配置的 chromiumPath(可指向一个当前未运行的浏览器);
- *   —  若 useSystemBrowser 为真,在此短路 → 直接走 ③,不下载;
  *   ② 缓存的、或现下载的 chrome-headless-shell(推荐路径);
  *   ③ 系统 Edge/Chrome 兜底(旧行为,离线/下载失败时仍可用)。
  *
  * @param {Object} options
  * @param {string} options.cacheDir         chrome-headless-shell 的缓存目录
  * @param {string} [options.configuredPath] 用户配置的 vscode-office.chromiumPath
- * @param {boolean} [options.useSystemBrowser] 跳过下载,直接用系统浏览器(逃生口)
  * @param {boolean} [options.noSystemFallback] 解析不到 shell 时返回 undefined 而非系统浏览器(预热用)
  * @param {Function} options.systemFallback () => string,返回系统浏览器路径(可抛错)
  * @param {Function} [options.withProgress] (task) => Promise,把下载任务包进进度 UI;
@@ -39,17 +37,12 @@ let inflightDownload = null
  * @returns {Promise<string|undefined>}
  */
 async function resolveExportBrowser(options) {
-  const { configuredPath, useSystemBrowser, noSystemFallback, systemFallback, onError } = options
+  const { configuredPath, noSystemFallback, systemFallback, onError } = options
   const fsm = options._fs || fs
 
   // ① 用户显式配置优先
   if (configuredPath && fsm.existsSync(configuredPath)) {
     return configuredPath
-  }
-
-  // 逃生口:用户选择系统浏览器 → 跳过下载
-  if (useSystemBrowser) {
-    return noSystemFallback ? undefined : systemFallback()
   }
 
   // ② 专用 chrome-headless-shell

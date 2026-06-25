@@ -36,7 +36,11 @@ export class MarkdownService {
             if (type != 'html') { // html导出速度快, 无需等待
                 vscode.window.showInformationMessage(`Starting export markdown to ${type}.`)
             }
-            await convertMd({ markdownFilePath: uri.fsPath, config: this.getConfig(option) })
+            const config = this.getConfig(option)
+            if (type != 'html') { // pdf/docx 需要浏览器渲染;html 不启动浏览器
+                config.executablePath = await this.resolveBrowser()
+            }
+            await convertMd({ markdownFilePath: uri.fsPath, config })
             vscode.window.showInformationMessage(`Export markdown to ${type} success!`)
         } catch (error) {
             Output.log(error)
@@ -73,7 +77,7 @@ export class MarkdownService {
                 format,
                 themeId,
                 extensionPath: this.context.extensionPath,
-                executablePath: format === 'html' ? undefined : this.getChromiumPath(),
+                executablePath: format === 'html' ? undefined : await this.resolveBrowser(),
                 puppeteerArgs: this.getPuppeteerArgs(),
             });
             return { ok: true, name: parse(out).base };
@@ -91,8 +95,8 @@ export class MarkdownService {
             type,
             "styles": [],
             withoutOutline,
-            // chromium path
-            "executablePath": this.getChromiumPath(),
+            // chromium path —— 由 exportMarkdown 经 resolveBrowser() 注入(优先 chrome-headless-shell)
+            "executablePath": undefined as string | undefined,
             // puppeteer launch args (useful for Linux servers running as root)
             "puppeteerArgs": this.getPuppeteerArgs(),
             // Set `true` to convert `\n` in paragraphs into `<br>`.
@@ -160,6 +164,57 @@ export class MarkdownService {
             const msg = "Not chromium found, export fail.";
             vscode.window.showErrorMessage(msg)
             throw new Error(msg)
+        }
+    }
+
+    /**
+     * 解析导出用浏览器:优先专用 chrome-headless-shell(独立无头二进制,
+     * 不与系统 Edge/Chrome 抢进程单例,Windows 上 Edge 开着也能导出),
+     * 首次使用时按需下载并缓存到 globalStorage,失败则退回系统浏览器。
+     */
+    private async resolveBrowser(): Promise<string | undefined> {
+        const { resolveExportBrowser } = require('./markdown/browserFinder');
+        const cacheDir = join(this.context.globalStorageUri.fsPath, 'browsers');
+        return resolveExportBrowser({
+            cacheDir,
+            configuredPath: Global.getConfig<string>('chromiumPath') || undefined,
+            systemFallback: () => this.getChromiumPath(),
+            onError: (e: any) => Output.log(e && e.stack ? e.stack : e),
+            withProgress: (task: (report: (pct: string) => void) => Promise<any>) =>
+                vscode.window.withProgress(
+                    {
+                        location: vscode.ProgressLocation.Notification,
+                        title: '首次导出:正在下载渲染引擎 chrome-headless-shell…',
+                        cancellable: false,
+                    },
+                    (progress) => task((pct) => progress.report({ message: pct }))
+                ),
+        });
+    }
+
+    /**
+     * 启动后台预热:确保导出用的 chrome-headless-shell 已下载缓存,使首次导出无需等待。
+     * fire-and-forget,失败只记日志(不影响导出:导出时会再试下载,仍不行才退系统浏览器兜底)。
+     */
+    public async prewarmBrowser(): Promise<void> {
+        const { prefetchExportBrowser } = require('./markdown/browserFinder');
+        const cacheDir = join(this.context.globalStorageUri.fsPath, 'browsers');
+        const status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+        try {
+            await prefetchExportBrowser({
+                cacheDir,
+                configuredPath: Global.getConfig<string>('chromiumPath') || undefined,
+                onError: (e: any) => Output.log(e && e.stack ? e.stack : e),
+                withProgress: (task: (report: (pct: string) => void) => Promise<any>) => {
+                    status.text = '$(sync~spin) 下载 Markdown 导出引擎…';
+                    status.show();
+                    return task((pct) => { status.text = `$(sync~spin) 下载 Markdown 导出引擎… ${pct}`; });
+                },
+            });
+        } catch (e: any) {
+            Output.log(e && e.stack ? e.stack : e);
+        } finally {
+            status.dispose();
         }
     }
 
