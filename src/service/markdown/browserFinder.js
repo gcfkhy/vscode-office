@@ -5,6 +5,20 @@ const fs = require("fs")
 // 升级 puppeteer-core 时务必同步此版本,保证下载到的无头二进制与 CDP 协议匹配。
 const CHROME_HEADLESS_SHELL_BUILD = "149.0.7827.22"
 
+// 国内镜像:npmmirror 的 chrome-for-testing 二进制镜像,路径布局与官方一致。
+const NPM_MIRROR_BASE_URL = "https://cdn.npmmirror.com/binaries/chrome-for-testing"
+
+/**
+ * 计算下载源的尝试顺序。
+ * preferMirror=true(简体中文环境)→ [镜像, 官方];否则 → [官方, 镜像]。
+ * 数组元素即传给 install({ baseUrl }):undefined 表示官方默认源,字符串为镜像 baseUrl。
+ * @param {boolean} preferMirror
+ * @returns {Array<string|undefined>}
+ */
+function resolveDownloadBaseUrls(preferMirror) {
+  return preferMirror ? [NPM_MIRROR_BASE_URL, undefined] : [undefined, NPM_MIRROR_BASE_URL]
+}
+
 // 并发去重:预热(启动)与导出可能同时触发下载。仅在真实路径(未注入 fake 依赖)生效,
 // 注入依赖的单测自动绕过,避免模块级状态污染测试隔离。
 let inflightDownload = null
@@ -114,4 +128,4 @@ async function doDownloadShell({ browsers, browser, buildId, cacheDir, withProgr
   return fsm.existsSync(out) ? out : undefined
 }
 
-module.exports = { resolveExportBrowser, prefetchExportBrowser, CHROME_HEADLESS_SHELL_BUILD }
+module.exports = { resolveExportBrowser, prefetchExportBrowser, resolveDownloadBaseUrls, CHROME_HEADLESS_SHELL_BUILD, NPM_MIRROR_BASE_URL }

@@ -1,7 +1,7 @@
 // 断言测试:resolveExportBrowser 的解析顺序(无网络,注入 fake 依赖)。
 // 运行:node test/browser_finder_test.js
 const assert = require("assert")
-const { resolveExportBrowser, prefetchExportBrowser, CHROME_HEADLESS_SHELL_BUILD } = require("../src/service/markdown/browserFinder")
+const { resolveExportBrowser, prefetchExportBrowser, resolveDownloadBaseUrls, CHROME_HEADLESS_SHELL_BUILD, NPM_MIRROR_BASE_URL } = require("../src/service/markdown/browserFinder")
 
 const SHELL_EXE = "/cache/chrome-headless-shell/win64-" + CHROME_HEADLESS_SHELL_BUILD + "/chrome-headless-shell.exe"
 
@@ -121,6 +121,16 @@ async function run() {
       cacheDir: "/cache", systemFallback: () => "SYSTEM", _browsers: browsers, _fs: fakeFs([SHELL_EXE]),
     })
     assert.strictEqual(out, SHELL_EXE, "prefetch cached → shell")
+  }
+
+  // ⑨ 纯函数:下载源顺序。preferMirror=true → [镜像, 官方];false → [官方, 镜像]
+  {
+    assert.deepStrictEqual(
+      resolveDownloadBaseUrls(true), [NPM_MIRROR_BASE_URL, undefined],
+      "preferMirror=true should try mirror first")
+    assert.deepStrictEqual(
+      resolveDownloadBaseUrls(false), [undefined, NPM_MIRROR_BASE_URL],
+      "preferMirror=false should try official first")
   }
 
   console.log("browser_finder_test: all assertions passed")
