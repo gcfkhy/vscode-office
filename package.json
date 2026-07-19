@@ -1,9 +1,9 @@
 {
-	"name": "markdown-office-viewer-pro",
-	"displayName": "Markdown Office Viewer Pro",
+	"name": "markdown-office-viewer-new",
+	"displayName": "Markdown Office Viewer New",
 	"description": "View Office, PDF, image and archive files, with a themed Markdown preview and export.",
 	"version": "1.0.10",
-	"publisher": "markdown-office-viewer",
+	"publisher": "markdown-office-viewer-new",
 	"icon": "images/logo.png",
 	"engines": {
 		"vscode": "^1.64.0"

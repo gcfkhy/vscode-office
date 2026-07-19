@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 这是什么
 
-`vscode-office`(Marketplace 名称 "Markdown Office Viewer Pro",id `markdown-office-viewer.markdown-office-viewer-pro`)是一个 VS Code 扩展,用自定义编辑器预览/编辑大量文件类型:Excel/Word/PowerPoint、PDF/EPUB、图片(含 HEIC/TIFF/PSD/ICNS/SVG)、字体、压缩包(zip/rar/7z/tar)、Java `.class`(反编译)、Markdown(只读预览,Catppuccin 风格,经 markdown-it 渲染)、HTML 预览、HTTP/REST 客户端、YAML 导航,以及 Git 历史查看器。
+`vscode-office`(Marketplace 名称 "Markdown Office Viewer New",id `markdown-office-viewer-new.markdown-office-viewer-new`)是一个 VS Code 扩展,用自定义编辑器预览/编辑大量文件类型:Excel/Word/PowerPoint、PDF/EPUB、图片(含 HEIC/TIFF/PSD/ICNS/SVG)、字体、压缩包(zip/rar/7z/tar)、Java `.class`(反编译)、Markdown(只读预览,Catppuccin 风格,经 markdown-it 渲染)、HTML 预览、HTTP/REST 客户端、YAML 导航,以及 Git 历史查看器。
 
 本项目 fork 自上游 `cweijan/vscode-office`,差异主要集中在 **Markdown 体验**(上游用 Vditor 所见即所得编辑器,本项目改为 markdown-it 只读预览 + 主题化导出)与整体定位上;其余预览能力基本继承自上游。
 
