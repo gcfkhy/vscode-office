@@ -1,9 +1,9 @@
 {
-	"name": "markdown-office-viewer-new",
-	"displayName": "Markdown Office Viewer New",
-	"description": "View Office, PDF, image and archive files, with a themed Markdown preview and export.",
-	"version": "1.0.10",
-	"publisher": "markdown-office-viewer-new",
+	"name": "MarkdownViewerPro",
+	"displayName": "MarkdownViewerPro",
+	"description": "vscode Markdown查看器，可导出部分页PDF和HTML以及图片格式",
+	"version": "1.0.20",
+	"publisher": "MarkdownViewerPro",
 	"icon": "images/logo.png",
 	"engines": {
 		"vscode": "^1.64.0"
@@ -815,7 +815,7 @@
 		"less": "^4.2.0",
 		"node-unrar-js": "^2.0.2",
 		"vite": "^8.0.16",
-    "vite-plugin-static-copy": "^2.2.0"
+		"vite-plugin-static-copy": "^2.2.0"
 	},
 	"dependencies": {
 		"7z-wasm": "^1.2.0",
